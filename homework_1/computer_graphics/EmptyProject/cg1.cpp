@@ -1,4 +1,4 @@
-/*
+﻿/*
   This program plots different 2D functions.
 */
 
@@ -263,20 +263,131 @@ void Display2() {
   fractalBinaryTree(t, 0.95, g_recursionCurrent);
 }
 
-void Display3() {
-  //Draw the recursive-square fractal here.
-  glColor3f(1, 0, 0);
-  drawRecursionLevel();
-  
+
+
+
+
+
+
+
+
+
+
+
+void drawOneSquare(Turtle& t, double side) {
+    for (int i = 0; i < 4; i++) {
+        t.draw(side);
+        t.rotate(pi / 2);
+    }
 }
 
+void drawSierpinskiCarpet(Turtle& t, double side, int level) {
+    if (level == 0) {
+        drawOneSquare(t, side);
+    }
+    else {
+        double cell = side / 3.0;
+        double gapFactor = 0.8;  // Squares take up 80% of their cell size
+        double newSide = cell * gapFactor;
+        double offset = (cell - newSide) / 2.0;
+
+        // Always draw the central square first
+        Turtle tCenter = t;
+        tCenter.move(cell + offset);
+        tCenter.rotate(pi / 2);
+        tCenter.move(cell + offset);
+        tCenter.rotate(-pi / 2);
+        drawOneSquare(tCenter, newSide);
+
+        // Recursively draw smaller squares around the central one
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 3; col++) {
+                if (row == 1 && col == 1) continue; // Skip the central square (already drawn)
+
+                Turtle tSub = t;
+                tSub.move(col * cell + offset);
+                tSub.rotate(pi / 2);
+                tSub.move(row * cell + offset);
+                tSub.rotate(-pi / 2);
+                drawSierpinskiCarpet(tSub, newSide, level - 1);
+            }
+        }
+    }
+}
+
+void Display3() {
+    glColor3f(1, 0, 0);
+    drawRecursionLevel(); // Displays "Recursion Level: 2"
+    Turtle t(-0.5, -0.5);
+    drawOneSquare(t, 1.0); // Draw outer boundary
+    drawSierpinskiCarpet(t, 1.0, 2);
+}
 
 void Display4() {
-  //Draw the triangle-like hex line fractal here.
-  glColor3f(1, 0, 0);
-  drawRecursionLevel();
-  
+    glColor3f(1, 0, 0);
+    drawRecursionLevel(); // Displays "Recursion Level: 4"
+    Turtle t(-0.5, -0.5);
+    drawOneSquare(t, 1.0); // Draw outer boundary
+    drawSierpinskiCarpet(t, 1.0, 4);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void drawOneHexagon(Turtle& t, double side) {
+    for (int i = 0; i < 6; i++) {
+        t.draw(side);
+        t.rotate(pi / 3);  // Rotate 60 degrees to form a hexagon
+    }
+}
+
+void drawKochHexFractal(Turtle& t, double side, int level) {
+    if (level == 0) {
+        drawOneHexagon(t, side);
+    }
+    else {
+        double newSide = side / 3.0;  // Shrink hexagons for next level
+        for (int i = 0; i < 6; i++) {
+            drawKochHexFractal(t, newSide, level - 1);
+            t.draw(newSide);
+            t.rotate(pi / 3);
+        }
+    }
+}
+
+void Display7() {
+    glColor3f(0, 0, 1);
+    drawRecursionLevel(); // Displays "Recursion Level: 2"
+    Turtle t(-0.5, 0.0);
+    drawKochHexFractal(t, 1.0, 2);
+}
+
+void Display8() {
+    glColor3f(0, 0, 1);
+    drawRecursionLevel(); // Displays "Recursion Level: 4"
+    Turtle t(-0.5, 0.0);
+    drawKochHexFractal(t, 1.0, 4);
+}
+
+
+
+
+
+
+
 
 template <typename FloatType>
 class JF {
@@ -366,28 +477,108 @@ public:
     JF<FloatType>(xmin, xmax, ymin, ymax, a, b, maxRadius, maxIteration) {}
 };
 
+
+
+
+
+
+
+
+
+
+
 void Display6() {
-  //Draw the Mandelbrot fractal here.
-  float drawSize = 1.0;
-  MB<double> mb(-2, 2, -2, 2);
-  /*
-    +1 because we're going full-window, and pixel-perfect drawing
-    is weird because pixels are actually placed at 0.5 coordinates.
-    More on this in the Shaders homework and lecture.
-  */
-  mb.draw(-drawSize, drawSize, -drawSize, drawSize, g_w + 1, g_h + 1);
+    float drawSize = 1.0;
+    int maxIterations = 100;
+
+    glBegin(GL_POINTS);
+    for (int px = 0; px <= g_w; px++) {
+        for (int py = 0; py <= g_h; py++) {
+            double x0 = -2.0 + (4.0 * px / g_w);
+            double y0 = -2.0 + (4.0 * py / g_h);
+            double x = 0.0, y = 0.0;
+            int iteration = 0;
+
+            while (x * x + y * y <= 4.0 && iteration < maxIterations) {
+                double xtemp = x * x - y * y + x0;
+                y = 2 * x * y + y0;
+                x = xtemp;
+                iteration++;
+            }
+
+            // Set color: Black for inside, White for outside
+            if (iteration == maxIterations)
+                glColor3f(0.0, 0.0, 0.0);  // Black
+            else
+                glColor3f(1.0, 1.0, 1.0);  // White
+
+            glVertex2f(-drawSize + 2.0 * drawSize * px / g_w,
+                -drawSize + 2.0 * drawSize * py / g_h);
+        }
+    }
+    glEnd();
+    glFlush();
 }
 
-void Display7() {
+void getColorFromPalette(int iteration, int maxIterations, float& r, float& g, float& b) {
+    if (iteration == maxIterations) {
+        // Black for inside the set
+        r = g = b = 0.0;
+    }
+    else {
+        float t = (float)iteration / maxIterations;
+        // Cycle through multiple colors
+        r = 0.5 + 0.5 * cos(6.28 * t + 0.0);
+        g = 0.5 + 0.5 * cos(6.28 * t + 2.0);
+        b = 0.5 + 0.5 * cos(6.28 * t + 4.0);
+    }
 }
 
-void Display8() {
-}
 
 void Display9() {
+    float drawSize = 1.0;
+    int maxIterations = 100;
+
+    glBegin(GL_POINTS);
+    for (int px = 0; px <= g_w; px++) {
+        for (int py = 0; py <= g_h; py++) {
+            double x0 = -2.0 + (4.0 * px / g_w);
+            double y0 = -2.0 + (4.0 * py / g_h);
+            double x = 0.0, y = 0.0;
+            int iteration = 0;
+
+            while (x * x + y * y <= 4.0 && iteration < maxIterations) {
+                double xtemp = x * x - y * y + x0;
+                y = 2 * x * y + y0;
+                x = xtemp;
+                iteration++;
+            }
+
+            // Get color from palette
+            float r, g, b;
+            getColorFromPalette(iteration, maxIterations, r, g, b);
+            glColor3f(r, g, b);
+
+            glVertex2f(-drawSize + 2.0 * drawSize * px / g_w,
+                -drawSize + 2.0 * drawSize * py / g_h);
+        }
+    }
+    glEnd();
+    glFlush();
 }
 
+
+
+
+
+
+
+
+
+
+
 void Display10() {
+
 }
 
 void init(void) {
