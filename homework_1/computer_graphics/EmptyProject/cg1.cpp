@@ -624,6 +624,8 @@ void Display10() {
 
 }
 
+
+
 void init(void) {
   glColor3f(1, 0, 0); //Just a starting default drawing colour.
   glClearColor(1.0,1.0,1.0,1.0);
@@ -645,6 +647,8 @@ void init(void) {
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 }
+
+
 
 void Display(void) {
   // Clear the buffer. See init();
@@ -686,6 +690,8 @@ void Display(void) {
   }
   glFlush();
 }
+
+
 
 void Reshape(int w, int h) {
   g_w = w;

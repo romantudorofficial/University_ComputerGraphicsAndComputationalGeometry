@@ -41,7 +41,7 @@ double func1 (double x)
 
 void Display3 ()
 {
-    double xMax = 100.0;
+    double xMax = 20.0;
     double yMax = 1.0;  // f(x) is at most 1.
 
     glColor3f(0, 0, 0);
@@ -53,8 +53,8 @@ void Display3 ()
         double y = func1(x); // get the y coordinate of the point
 
         // normalize: x mapped to [0,1], y to [0,1] so it fits into openGL's system
-        double nx = x / xMax;
-        double ny = y / yMax;
+        double nx = x / xMax * 0.9;
+        double ny = y / yMax * 0.9;
 
         glVertex2d(nx, ny); // plot the point
     }
@@ -137,7 +137,7 @@ void Display5 ()
 {
     glColor3f(0, 0, 0);
 
-    plot(cicloidX, cicloidY, 0.1, 0.2, -3*pi, 8 * pi, step, 1.0, 0.5);
+    plot(cicloidX, cicloidY, 0.1, 0.2, -3*pi, 8 * pi, step, 5.0, 2.0);
 }
 
 
@@ -249,7 +249,7 @@ void Display9 ()
 {
     glColor3f(0, 0, 0);
 
-    plot(polarFlowerX, polarFlowerY, 10, 0, 0, 2 * pi, 0.01, 1, 1);
+    plot(polarFlowerX, polarFlowerY, 10, 0, 0, 2 * pi, 0.01, 1.3, 1.3);
 }
 
 
