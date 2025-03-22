@@ -273,6 +273,7 @@ double trisectrixY (double a, double dummy, double t)
 void Display10 ()
 {
     std::vector<std::pair<double, double>> points;
+
     double a = 0.2;
     double tmin = -pi / 2 + 0.01;
     double tmax = pi / 2 - 0.01;
@@ -288,12 +289,14 @@ void Display10 ()
 
         double x = trisectrixX(a, 0, t);
         double y = trisectrixY(a, 0, t);
+
         points.push_back({ x, y });
     }
 
     // Compute bounding box for scaling:
     double xmin = points[0].first, xmax = points[0].first;
     double ymin = points[0].second, ymax = points[0].second;
+
     for (auto& pt : points)
     {
         if (pt.first < xmin) xmin = pt.first;
@@ -305,37 +308,50 @@ void Display10 ()
     // Use the maximum absolute value for scaling.
     double scaleX = fabs(xmax) > fabs(xmin) ? fabs(xmax) : fabs(xmin);
     double scaleY = fabs(ymax) > fabs(ymin) ? fabs(ymax) : fabs(ymin);
+
     if (scaleX == 0) scaleX = 1;
     if (scaleY == 0) scaleY = 1;
 
     // First, draw the edge (in red) using a line strip.
     glColor3f(1, 0, 0);
+
     glBegin(GL_LINE_STRIP);
+
     for (auto& pt : points)
     {
         glVertex2d(pt.first / scaleX, pt.second / scaleY);
     }
+
     glEnd();
 
     // Next, fill the interior using a triangle fan.
+    // 
     // Compute the centroid.
     double cx = 0, cy = 0;
+
     for (auto& pt : points)
     {
         cx += pt.first;
         cy += pt.second;
     }
+
     cx /= points.size();
     cy /= points.size();
 
     glColor3f(0.8, 0.8, 1);
+
     glBegin(GL_TRIANGLE_FAN);
+
     glVertex2d(cx / scaleX, cy / scaleY);
-    for (auto& pt : points) {
+
+    for (auto& pt : points)
+    {
         glVertex2d(pt.first / scaleX, pt.second / scaleY);
     }
+
     // Close the fan by connecting back to the first point.
     glVertex2d(points.front().first / scaleX, points.front().second / scaleY);
+
     glEnd();
 }
 

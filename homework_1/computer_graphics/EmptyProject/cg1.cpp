@@ -300,7 +300,7 @@ void drawSierpinskiCarpet (Turtle& t, double side, int level)
         drawOneSquare(tCenter, newSide);
 
         // The other squares must be 1/3 of the main one's size.
-        gapFactor = 0.3;
+        gapFactor = 0.3; // 0.3
         newSide = cell * gapFactor;
         offset = (cell - newSide) / 2.0;
 
@@ -317,6 +317,7 @@ void drawSierpinskiCarpet (Turtle& t, double side, int level)
                 tSub.rotate(pi / 2);
                 tSub.move(row * cell + offset);
                 tSub.rotate(-pi / 2);
+
                 drawSierpinskiCarpet(tSub, newSide, level - 1);
             }
         }
@@ -354,8 +355,6 @@ void Display4 ()
 }
 
 
-
-// Task 2 - Level 2
 
 template <typename FloatType>
 class JF {
@@ -498,8 +497,8 @@ void getColorFromPalette (int iteration, int maxIterations, float& r, float& g, 
     {
         float t = (float)iteration / maxIterations;
 
-        // Cycle through multiple colors
-        r = 0.5 + 0.5 * cos(6.28 * t + 0.0);
+        // Cycle through multiple colors at different rates.
+        r = 0.5 + 0.5 * cos(6.28 * t + 0.0); // 2 pi
         g = 0.5 + 0.5 * cos(6.28 * t + 2.0);
         b = 0.5 + 0.5 * cos(6.28 * t + 4.0);
     }
