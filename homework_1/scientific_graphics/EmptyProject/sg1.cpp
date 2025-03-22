@@ -6,6 +6,8 @@
 
 #include "glut.h"
 
+
+
 // Precomputed constants:
 double circle = atan(1) * 8;
 double halfCircle = atan(1) * 4;
@@ -20,40 +22,51 @@ unsigned char prevKey;
 
 
 
-//----------------------------------------------------
-// Task 1: Plot f(x) = 1 if x==0, or d(x)/x for x>0,
-// where d(x) is the distance to the closest integer, x in [0,100]
-double func1(double x) {
-    if (x == 0) return 1.0;
+// Task 1
+
+double func1 (double x)
+{
+    if (x == 0)
+        return 1.0;
+
     // distance from x to the nearest integer:
-    double floorx = floor(x);
-    double ceilx = ceil(x);
-    double d = (x - floorx < ceilx - x) ? x - floorx : ceilx - x;
+    double floorx = floor(x); // the largest integer less than or equal to x
+    double ceilx = ceil(x); // the smallest integer greater than or equal to x
+    double d = (x - floorx < ceilx - x) ? x - floorx : ceilx - x; // shortest between the 2 distances (the distance to the closest integer)
+
     return d / x;
 }
 
-void Display3() {
+
+
+void Display3 ()
+{
     double xMax = 100.0;
     double yMax = 1.0;  // f(x) is at most 1.
+
     glColor3f(0, 0, 0);
+
     glBegin(GL_LINE_STRIP);
-    for (double x = 0; x <= xMax; x += step) {
-        double y = func1(x);
-        // normalize: x mapped to [0,1], y to [0,1]
+
+    for (double x = 0; x <= xMax; x += step)
+    {
+        double y = func1(x); // get the y coordinate of the point
+
+        // normalize: x mapped to [0,1], y to [0,1] so it fits into openGL's system
         double nx = x / xMax;
         double ny = y / yMax;
-        glVertex2d(nx, ny);
+
+        glVertex2d(nx, ny); // plot the point
     }
-    glEnd();
+
+    glEnd(); // end drawing
 }
 
 
 
-//----------------------------------------------------
-// Generic plot function (task 3)
-// Plots a function family defined by function pointers fx, fy with parameters a, b, over t in [intervalStart, intervalEnd].
-// scaleX and scaleY are used to normalize the output coordinates.
-void plot(double (*fx)(double, double, double),
+// Task 3
+
+void plot (double (*fx)(double, double, double),
     double (*fy)(double, double, double),
     double a, double b,
     double intervalStart, double intervalEnd,
@@ -61,143 +74,234 @@ void plot(double (*fx)(double, double, double),
     GLint primitive = GL_LINE_STRIP)
 {
     glBegin(primitive);
-    for (double t = intervalStart; t <= intervalEnd; t += plotStep) {
+
+    for (double t = intervalStart; t <= intervalEnd; t += plotStep)
+    {
         double x = fx(a, b, t) / scaleX;
         double y = fy(a, b, t) / scaleY;
+
         glVertex2d(x, y);
     }
+
     glEnd();
 }
 
 
 
-//----------------------------------------------------
-// Task 2: Function definitions for 3 curve families:
+// Task 2 - Circle Concoid
 
-// 2a) Circle Concoid (Limaçon, Pascal's Snail):
-// x = 2*(a*cos(t) + b)*cos(t), y = 2*(a*cos(t) + b)*sin(t), t in (-pi, pi)
-// For a=0.3, b=0.2.
-double circleConcoidX(double a, double b, double t) {
+double circleConcoidX (double a, double b, double t)
+{
+    // calculate x
     return 2 * (a * cos(t) + b) * cos(t);
 }
 
-double circleConcoidY(double a, double b, double t) {
+
+
+double circleConcoidY (double a, double b, double t)
+{
+    // calculate y
     return 2 * (a * cos(t) + b) * sin(t);
 }
 
 
 
+void Display4 ()
+{
+    glColor3f(0, 0, 0);
 
-// 2b) Cicloid:
-// x = a*t - b*sin(t), y = a - b*cos(t), t in R.
-// For a=0.1, b=0.2.
-// We restrict t to [0, 4*pi] for a visible segment.
-double cicloidX(double a, double b, double t) {
+    plot(circleConcoidX, circleConcoidY, 0.3, 0.2, -pi, pi, step, 1.0, 1.0);
+}
+
+
+
+// Task 2 - Cicloid
+
+double cicloidX (double a, double b, double t)
+{
+    // calculate x
     return a * t - b * sin(t);
 }
 
-double cicloidY(double a, double b, double t) {
+
+
+double cicloidY (double a, double b, double t)
+{
+    // calculate y
     return a - b * cos(t);
 }
 
 
 
+void Display5 ()
+{
+    glColor3f(0, 0, 0);
 
-// 2c) Epicicloid:
-// x = (a - b)*cos((b/a)*t) - b*cos(t - (b/a)*t),
-// y = (a - b)*sin((b/a)*t) - b*sin(t - (b/a)*t),
-// t in [0, 2*pi]; for a=0.1, b=0.3.
-double epicicloidX(double a, double b, double t) {
+    plot(cicloidX, cicloidY, 0.1, 0.2, -3*pi, 8 * pi, step, 1.0, 0.5);
+}
+
+
+
+// Task 2 - Epicicloid
+
+double epicicloidX (double a, double b, double t)
+{
+    // calculate x
+    return (a + b) * cos((b / a) * t) - b * cos(t + (b / a) * t);
+}
+
+
+
+double epicicloidY (double a, double b, double t)
+{
+    // calculate y
+    return (a + b) * sin((b / a) * t) - b * sin(t + (b / a) * t);
+}
+
+
+
+void Display6 ()
+{
+    glColor3f(0, 0, 0);
+
+    plot(epicicloidX, epicicloidY, 0.1, 0.3, 0, 2 * pi, step, 0.8, 0.8);
+}
+
+
+
+// Task 2 - Hipocicloid
+
+double hipocicloidX (double a, double b, double t)
+{
+    // calculate x
     return (a - b) * cos((b / a) * t) - b * cos(t - (b / a) * t);
 }
 
-double epicicloidY(double a, double b, double t) {
+
+
+double hipocicloidY (double a, double b, double t)
+{
+    // calculate y
     return (a - b) * sin((b / a) * t) - b * sin(t - (b / a) * t);
 }
 
 
 
+void Display7 ()
+{
+    glColor3f(0, 0, 0);
 
-//----------------------------------------------------
-// Task 4: Polar functions
+    plot(hipocicloidX, hipocicloidY, 0.1, 0.3, 0, 2 * pi, step, 0.8, 0.8);
+}
 
 
-// 4a) Logarithmic spiral (in polar coordinates):
-// r = a * exp(1+t), t in (0,∞) – we use t in [0,4] for illustration, a = 0.02.
-double polarLogSpiralX(double a, double dummy, double t) {
+
+// Task 4 - Logarithmic Spiral
+
+double polarLogSpiralX (double a, double dummy, double t)
+{
     double r = a * exp(1 + t);
-    return r * cos(t);
+
+    return r * cos(t); // get the Cartesian coordinate
 }
 
 
 
-double polarLogSpiralY(double a, double dummy, double t) {
+double polarLogSpiralY (double a, double dummy, double t)
+{
     double r = a * exp(1 + t);
-    return r * sin(t);
+
+    return r * sin(t); // get the Cartesian coordinate
 }
 
 
 
-// 4b) Sine polar flower:
-// r = sin(a*t), t in [0,2*pi]; for a=10.
-double polarFlowerX(double a, double dummy, double t) {
+void Display8 ()
+{
+    glColor3f(0, 0, 0);
+
+    plot(polarLogSpiralX, polarLogSpiralY, 0.02, 0, 0, 4, 0.05, 3.0, 3.0);
+}
+
+
+
+// Task 4 - Sine Polar Flower
+
+double polarFlowerX (double a, double dummy, double t)
+{
     double r = sin(a * t);
-    return r * cos(t);
+
+    return r * cos(t); // get the Cartesian coordinate
 }
 
 
 
-double polarFlowerY(double a, double dummy, double t) {
+double polarFlowerY (double a, double dummy, double t)
+{
     double r = sin(a * t);
-    return r * sin(t);
+
+    return r * sin(t); // get the Cartesian coordinate
 }
 
 
 
-//----------------------------------------------------
-// Task 5: Longchamps' Trisectrix (Equilateral Trefoil)
-// Given: x = a / (4*cos^2(t)-3), y = a*tan(t) / (4*cos^2(t)-3)
-// t in (-pi/2,pi/2) excluding t = ±pi/6.
-// Here we “skip” near singularities (and one might mathematically modify the definition).
-double trisectrixX(double a, double dummy, double t) {
+void Display9 ()
+{
+    glColor3f(0, 0, 0);
+
+    plot(polarFlowerX, polarFlowerY, 10, 0, 0, 2 * pi, 0.01, 1, 1);
+}
+
+
+
+// Task 5
+
+double trisectrixX (double a, double dummy, double t)
+{
     return a / (4 * cos(t) * cos(t) - 3);
 }
 
 
 
-double trisectrixY(double a, double dummy, double t) {
+double trisectrixY (double a, double dummy, double t)
+{
     return (a * tan(t)) / (4 * cos(t) * cos(t) - 3);
 }
 
 
 
-void Display10() {
-    // We'll sample the curve in two branches avoiding the singularities near ±pi/6.
+void Display10 ()
+{
     std::vector<std::pair<double, double>> points;
     double a = 0.2;
     double tmin = -pi / 2 + 0.01;
     double tmax = pi / 2 - 0.01;
     double singular1 = -pi / 6;
     double singular2 = pi / 6;
-    double epsilon = 0.05; // skip points near singularities
+    double epsilon = 0.05;
 
     // Sample: if t is too close to either singularity, skip it.
-    for (double t = tmin; t <= tmax; t += step) {
+    for (double t = tmin; t <= tmax; t += step)
+    {
         if (fabs(t - singular1) < epsilon || fabs(t - singular2) < epsilon)
             continue;
+
         double x = trisectrixX(a, 0, t);
         double y = trisectrixY(a, 0, t);
         points.push_back({ x, y });
     }
+
     // Compute bounding box for scaling:
     double xmin = points[0].first, xmax = points[0].first;
     double ymin = points[0].second, ymax = points[0].second;
-    for (auto& pt : points) {
+    for (auto& pt : points)
+    {
         if (pt.first < xmin) xmin = pt.first;
         if (pt.first > xmax) xmax = pt.first;
         if (pt.second < ymin) ymin = pt.second;
         if (pt.second > ymax) ymax = pt.second;
     }
+
     // Use the maximum absolute value for scaling.
     double scaleX = fabs(xmax) > fabs(xmin) ? fabs(xmax) : fabs(xmin);
     double scaleY = fabs(ymax) > fabs(ymin) ? fabs(ymax) : fabs(ymin);
@@ -207,7 +311,8 @@ void Display10() {
     // First, draw the edge (in red) using a line strip.
     glColor3f(1, 0, 0);
     glBegin(GL_LINE_STRIP);
-    for (auto& pt : points) {
+    for (auto& pt : points)
+    {
         glVertex2d(pt.first / scaleX, pt.second / scaleY);
     }
     glEnd();
@@ -215,14 +320,15 @@ void Display10() {
     // Next, fill the interior using a triangle fan.
     // Compute the centroid.
     double cx = 0, cy = 0;
-    for (auto& pt : points) {
+    for (auto& pt : points)
+    {
         cx += pt.first;
         cy += pt.second;
     }
     cx /= points.size();
     cy /= points.size();
 
-    glColor3f(0.8, 0.8, 1); // light blue fill
+    glColor3f(0.8, 0.8, 1);
     glBegin(GL_TRIANGLE_FAN);
     glVertex2d(cx / scaleX, cy / scaleY);
     for (auto& pt : points) {
@@ -235,64 +341,8 @@ void Display10() {
 
 
 
-//----------------------------------------------------
-// Display functions for the 4 families using generic plot:
-
-
-// Display4: Circle Concoid
-void Display4() {
-    glColor3f(0, 0, 0);
-    // Domain: t in (-pi, pi)
-    // For a=0.3, b=0.2. For our function, typical values are roughly in [-1,1].
-    plot(circleConcoidX, circleConcoidY, 0.3, 0.2, -pi, pi, step, 1.0, 1.0);
-}
-
-
-
-// Display5: Cicloid
-void Display5() {
-    glColor3f(0, 0, 0);
-    // Domain: t in [0, 4*pi] gives a few arches.
-    // For a=0.1, b=0.2, the x-range can be a bit large.
-    // We choose a scale factor to compress the x-axis.
-    plot(cicloidX, cicloidY, 0.1, 0.2, 0, 4 * pi, step, 1.6, 0.3);
-}
-
-
-
-// Display6: Epicicloid
-void Display6() {
-    glColor3f(0, 0, 0);
-    // Domain: t in [0,2*pi] for a=0.1, b=0.3.
-    // Scale factors chosen so that the plot fits in [-1,1]^2.
-    plot(epicicloidX, epicicloidY, 0.1, 0.3, 0, 2 * pi, step, 0.5, 0.5);
-}
-
-
-
-// Display8: Logarithmic Spiral (polar)
-void Display8() {
-    glColor3f(0, 0, 0);
-    // Domain: t in [0,4] is arbitrary to see several turns.
-    // a=0.02; dummy parameter b not used.
-    plot(polarLogSpiralX, polarLogSpiralY, 0.02, 0, 0, 4, 0.05, 3.0, 3.0);
-}
-
-
-
-// Display9: Sine Polar Flower
-void Display9() {
-    glColor3f(0, 0, 0);
-    // Domain: t in [0, 2*pi]. a=10 determines the frequency (2*a petals).
-    // Scale factors chosen to keep r in [-1,1].
-    plot(polarFlowerX, polarFlowerY, 10, 0, 0, 2 * pi, 0.01, 1, 1);
-}
-
-
-
-//----------------------------------------------------
-// The remaining Display functions (Display1 and Display2) are as before.
-void Display1() {
+void Display1 ()
+{
     double xmax, ymax, xmin, ymin;
     double a = 1, b = 2;
     double localStep = 0.05;
@@ -335,7 +385,8 @@ void Display1() {
 
 
 
-void Display2() {
+void Display2 ()
+{
     double xmax = 8 * pi;
     double ymax = exp(1.1);
 
@@ -397,6 +448,9 @@ void Display (void)
         case '6':
             Display6(); // Epicicloid
             break;
+        case '7':
+            Display7(); // Hipocicloid
+            break;
         case '8':
             Display8(); // Logarithmic spiral
             break;
@@ -404,7 +458,7 @@ void Display (void)
             Display9(); // Sine polar flower
             break;
         case '0':
-            Display10(); // Longchamps' Trisectrix with fill
+            Display10(); // Longchamps' Trisectrix
             break;
         default:
             break;
