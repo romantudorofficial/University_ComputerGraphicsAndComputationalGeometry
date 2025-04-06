@@ -269,14 +269,33 @@ mpg,cylinders,displacement,horsepower,weight,acceleration,model_year,origin,name
 \end{frame}
 
 
+
 \begin{frame}
 \begin{figure}
   \center
 \begin{tikzpicture}
+
+
+  % Task 3: Polar plotting
+
+  \begin{polaraxis}
+
+    \addplot+ [
+      domain=0:360,
+      samples=500,
+      blue,
+      mark=none
+    ] ({x}, {sin(10*x)});
+    
+  \end{polaraxis}
+  
+
 \end{tikzpicture}
   \caption{Task 3: Polar plotting}
 \end{figure}
 \end{frame}
+
+
 
 \begin{frame}
   \begin{figure}
