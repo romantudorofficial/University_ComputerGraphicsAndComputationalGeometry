@@ -54,7 +54,7 @@ mpg,cylinders,displacement,horsepower,weight,acceleration,model_year,origin,name
 
   \draw[blue, thick] 
     (1,0) -- (0.5,0.866) -- (-0.5,0.866) -- (-1,0) -- (-0.5,-0.866) -- (0.5,-0.866) -- cycle;
-    
+
   \draw[red, thick] 
     (0.6,0) -- (0.3,0.5196) -- (-0.3,0.5196) -- (-0.6,0) -- (-0.3,-0.5196) -- (0.3,-0.5196) -- cycle;
 
@@ -231,10 +231,23 @@ mpg,cylinders,displacement,horsepower,weight,acceleration,model_year,origin,name
 \end{frame}
 
 
+
 \begin{frame}
 \begin{figure}
   \center
-\begin{tikzpicture}
+  \begin{tikzpicture}[scale=6]
+
+
+  % Task 2: Circle Choncoid
+
+  \def\a{0.3}
+
+  \def\b{0.2}
+
+  \draw[black, smooth, variable=\t, domain=-3.1416:3.1416, samples=200] 
+    plot ({2*(\a*cos(deg(\t))+\b)*cos(deg(\t))}, {2*(\a*cos(deg(\t))+\b)*sin(deg(\t))});
+
+
 \end{tikzpicture}
   \caption{Task 2: Circle Concoid}
 \end{figure}
