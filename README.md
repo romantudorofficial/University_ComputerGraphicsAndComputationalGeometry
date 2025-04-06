@@ -1,2 +1,1 @@
-# University_ComputerGraphicsAndComputationalGeometry
-University - Computer Graphics and Computational Geometry
+# University - Computer Graphics And Computational Geometry
