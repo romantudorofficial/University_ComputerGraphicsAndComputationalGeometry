@@ -321,6 +321,113 @@ mpg,cylinders,displacement,horsepower,weight,acceleration,model_year,origin,name
   \end{figure}
 \end{frame}
 
+
+
+% Task 4: Plotting datafiles.
+
+\begin{frame}
+  \frametitle{MPG vs Horsepower}
+  \begin{figure}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[
+        xlabel={horsepower},
+        ylabel={mpg},
+        title={MPG vs Horsepower},
+        only marks,
+        width=10cm,
+        height=6cm,
+        grid=both
+      ]
+        \addplot table [x=horsepower, y=mpg, col sep=comma] {mpg.csv};
+      \end{axis}
+    \end{tikzpicture}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \frametitle{MPG vs Displacement}
+  \begin{figure}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[
+        xlabel={displacement},
+        ylabel={mpg},
+        title={MPG vs Displacement},
+        only marks,
+        width=10cm,
+        height=6cm,
+        grid=both
+      ]
+        \addplot table [x=displacement, y=mpg, col sep=comma] {mpg.csv};
+      \end{axis}
+    \end{tikzpicture}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \frametitle{MPG vs Weight}
+  \begin{figure}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[
+        xlabel={weight},
+        ylabel={mpg},
+        title={MPG vs Weight},
+        only marks,
+        width=10cm,
+        height=6cm,
+        grid=both
+      ]
+        \addplot table [x=weight, y=mpg, col sep=comma] {mpg.csv};
+      \end{axis}
+    \end{tikzpicture}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \frametitle{MPG vs Acceleration}
+  \begin{figure}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[
+        xlabel={acceleration},
+        ylabel={mpg},
+        title={MPG vs Acceleration},
+        only marks,
+        width=10cm,
+        height=6cm,
+        grid=both
+      ]
+        \addplot table [x=acceleration, y=mpg, col sep=comma] {mpg.csv};
+      \end{axis}
+    \end{tikzpicture}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \frametitle{MPG vs Cylinders}
+  \begin{figure}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[
+        xlabel={cylinders},
+        ylabel={mpg},
+        title={MPG vs Cylinders},
+        only marks,
+        xtick={3,4,5,6,8},
+        width=10cm,
+        height=6cm,
+        grid=both
+      ]
+        \addplot table [x=cylinders, y=mpg, col sep=comma] {mpg.csv};
+      \end{axis}
+    \end{tikzpicture}
+  \end{figure}
+\end{frame}
+
+
+
 \begin{frame}
   \begin{figure}
     \center
