@@ -416,81 +416,137 @@ void Display5() {
 
 // Task 3
 
+// Task 3a: second cube shorter by Y‑scale (press '6')
 void Display6() {
-    // original for task 3
     glColor3f(0, 0, 0);
-    drawBitmapString("Task 3a: original (press '6')", -0.95f, -0.95f);
-    // orthographic + view
+    drawBitmapString("Task 3a: cube2 scaled shorter (press '6')", -0.95f, -0.95f);
+    advanceAnimationTime();
+
+    // Orthographic setup
     glMatrixMode(GL_PROJECTION);
-    glPushMatrix(); glLoadIdentity();
+    glPushMatrix();
+    glLoadIdentity();
     glOrtho(-2, 2, -2, 2,
         g_sceneDepth - g_sceneZRadius,
         g_sceneDepth + g_sceneZRadius);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glTranslated(0, 0, -g_sceneDepth);
-    glRotated(20, 1, 0, 0);
-    glRotated(-30, 0, 1, 0);
-    drawAxes();
-    drawCube(1, 1.0f);
+
+    // Draw axes
+    drawAxes(2.0f);
+
+    // First cube (full size)
+    drawCube(1.0f, 1.0f);
+
+    // Second cube: translate right, then scale Y < 1
+    glPushMatrix();
+    glTranslatef(1.1f, 0.0f, 0.0f);
+    glScalef(1.0f, 0.8f, 1.0f);   // 80% height
+    drawCube(1.0f, 1.0f);
+    glPopMatrix();
+
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
 }
 
+// Task 3b: peek around & shorter cube2 (press '7')
 void Display7() {
-    // rotated by –10° around Z
     glColor3f(0, 0, 0);
-    drawBitmapString("Task 3b: –10° about Z (press '7')", -0.95f, -0.95f);
+    drawBitmapString("Task 3b: Y‑peek + cube2 shorter (press '7')", -0.95f, -0.95f);
+    advanceAnimationTime();
+
+    // Orthographic setup
     glMatrixMode(GL_PROJECTION);
-    glPushMatrix(); glLoadIdentity();
+    glPushMatrix();
+    glLoadIdentity();
     glOrtho(-2, 2, -2, 2,
         g_sceneDepth - g_sceneZRadius,
         g_sceneDepth + g_sceneZRadius);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glTranslated(0, 0, -g_sceneDepth);
-    glRotated(20, 1, 0, 0);
-    glRotated(-30, 0, 1, 0);
-    glRotated(-10, 0, 0, 1);
-    drawAxes();
-    drawCube(1, 1.0f);
+
+    // Rotate world so you see sides
+    glRotated(-10.0, 0, 1, 0);
+
+    // Draw axes
+    drawAxes(2.0f);
+
+    // First cube (full size)
+    drawCube(1.0f, 1.0f);
+
+    // Second cube: translate, scale Y < 1
+    glPushMatrix();
+    glTranslatef(1.1f, 0.0f, 0.0f);
+    glScalef(1.0f, 0.8f, 1.0f);   // same 80% height
+    drawCube(1.0f, 1.0f);
+    glPopMatrix();
+
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
 }
+
 
 
 // Task 4
 
+// Task 4a: above-right view (press '8')
 void Display8() {
     glColor3f(0, 0, 0);
-    drawBitmapString("Task 4: perspective + skew (press '8')", -0.95f, -0.95f);
+    drawBitmapString("Task 4a: above & right (press '8')", -0.95f, -0.95f);
+    advanceAnimationTime();
 
-    // set up perspective
+    // orthographic projection
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    // example frustum: left/right/bottom/top/near/far
-    glFrustum(-1.0, 1.0, -1.0, 1.0, 1.5, 200.0);
+    glOrtho(-2, 2, -2, 2,
+        g_sceneDepth - g_sceneZRadius,
+        g_sceneDepth + g_sceneZRadius);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
-    // position camera:
-    glTranslated(0, 0, -20.0);
-    glRotated(25, 1, 0, 0);
-    glRotated(-30, 0, 1, 0);
+    // move camera back
+    glTranslated(0, 0, -g_sceneDepth);
 
-    // if faces look trapezoidal, apply shear matrix:
-    GLfloat shear[16] = {
-      1, 0,  0, 0,
-      0, 1,  0, 0,
-     0.3,0,  1, 0,
-      0, 0,  0, 1
-    };
-    glMultMatrixf(shear);
+    // tilt DOWN by 30° around X, then rotate LEFT by 30° around Y
+    glRotated(-30.0, 1, 0, 0);  // look down
+    glRotated(30.0, 0, 1, 0);  // look right
 
-    drawAxes();
-    drawCube(1, 1.0f);
+    drawAxes(1.5f);
+    drawCube(1.0f, 1.0f);
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+}
+
+
+// Task 4b: below-left view (press '9')
+void Display9() {
+    glColor3f(0, 0, 0);
+    drawBitmapString("Task 4b: below & left (press '9')", -0.95f, -0.95f);
+    advanceAnimationTime();
+
+    // orthographic projection
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(-2, 2, -2, 2,
+        g_sceneDepth - g_sceneZRadius,
+        g_sceneDepth + g_sceneZRadius);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glTranslated(0, 0, -g_sceneDepth);
+
+    // tilt UP by 30° around X, then rotate RIGHT by 30° around Y
+    glRotated(30.0, 1, 0, 0);   // look up
+    glRotated(-30.0, 0, 1, 0);  // look left
+
+    drawAxes(1.5f);
+    drawCube(1.0f, 1.0f);
 
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
@@ -499,9 +555,6 @@ void Display8() {
 
 
 
-
-void Display9() {
-}
 
 void Display10() {
 }
