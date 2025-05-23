@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<!-- saved from url=(0070)https://profs.info.uaic.ro/eugen.croitoru/teaching/cg/res/cg4/cg4.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WebGL: Shaders</title>
+    <!-- Set the canvas to cover the whole inner surface of the window. -->
+    <style>
+      canvas {
+	  width: 100%;
+	  height: 100%;
+	  border: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Create a canvas to draw upon. -->
+    <canvas id="canvas" width="1889" height="945"></canvas>
+  
+
+  
+
+  
+  <script id="vertex-shader" type="x-shader/x-vertex"># version 300 es
+    //The version number needs to be the absolute first line.^^^^^^^
+
+    //The vertex shader is called once per vertex.
+    
+    /*precision controls the precision of the computations done by the GPU,
+      and also their speed.
+    */
+    precision mediump float;
+    //M_PI is not defined in GLSL.	
+    #define M_PI 3.1415926535897932384626433832795
+    /*An uniform(constant across all vertices) input from which
+      we receive the transformation matrix.
+    */
+    uniform mat4 u_matrix4;
+    //An uniform input from which we receive a clock.	
+    uniform float u_vertexTime;
+    /*A varying(changing across all vertices) input	giving us the position of each vertex.
+      Bound and set below, in the JS script's rendering process.
+    */
+    in vec3 i_vertPosition;
+    //A varying input	giving us the color of each vertex.
+    in vec4 i_vertColor;
+    //Two output variables which will be automatically passed by name in the next shader.
+    out vec4 io_fragPosition;
+    out vec4 io_fragColor;
+    
+    void main() {
+	/*Add the homogenous coordinate.
+	  i_vertPosition has: .x, .y, .z.
+	  pos has the same x, y, z, and pos.w == 1
+	  Vectors can be accessed like pos[1] == pos.y.
+	  Constructors are flexible, as seen below: vec4(vec3, scalar);
+	  could also be e.g.: vec4(vec2, vec2).
+	*/
+	vec4 pos = vec4(i_vertPosition, 1);
+
+	/*Apply the matrix transformation; since this matrix contains our projection
+	  and model transformation, each vertex is now in its proper place in the scene.
+	*/
+	pos *= u_matrix4;
+	float rad = 3.0;
+	/*Let's manipulate the y coordinate, and make the objects bounce by a sin().
+	  Since sin() is smooth and periodic, this yields a smooth uninterrupted animation.
+	*/
+	pos.y += rad * cos(u_vertexTime * M_PI);
+	/*--->First homework requirement: make the cubes move in a circular trajectory
+	  (circle or ellipse) instead of just bouncing up and down.
+	*/
+	/*gl_Position is the output variable where OpenGL looks for final vertex coordinates.
+	  Don't declare it as an 'out', it's implicit.
+	  n.b.: it is _not_ gl_position, but gl_Position.
+	*/
+	gl_Position = pos;
+	//We also pass the original coordinates and color to the next shader.
+	io_fragPosition = vec4(i_vertPosition, 1);
+	vec4 rgba = i_vertColor;
+	/*We could do some per-vertex color manipulation here.
+	  Otherwise, we might as well io_fragColor = i_vertColor;
+	*/
+	io_fragColor = rgba;
+
+    }
+  </script>
+
+  <!-- fragment shader -->
+  <script id="fragment-shader" type="x-shader/x-fragment"># version 300 es
+    /*The fragment shader is called once or pultiple times per pixel displayed on screen.
+      You can think of a fragment as a pixel candidate - it could be displayed as a pixel,
+      or it could be discarded later due to e.g. depth desting.
+    */
+#define M_PI 3.1415926535897932384626433832795
+    precision mediump float;
+    /*We use the same time as in the vertex shader; however	since this is a different
+      shader, we need to have a different variable.	
+    */
+    uniform float u_fragmentTime;
+    //Here we receive the variables from the vertex shader. It is enough that they are named the same for OpenGL to pass them. However, as there are far more fragments than vertices, OpenGL also interpolates them!	
+    in vec4 io_fragPosition;
+    in vec4 io_fragColor;
+    //We define a variable which will be asigned as the color for the fragment. The first out vec4 variable will be understood by OpenGL as being the colour.
+    out vec4 o_fragColor;
+    //We can also be very explicit with the memory location.
+    //layout(location = 0 ) out vec4 o_fragColor;
+    //The pre-defined gl_FragColor is deprecated, don't use it.  
+    
+    void main() {
+	/*We also have the pre-defined gl_FragCoord: vec4, which gives fragment coordinates
+          in window pixels, floating point. x from -0.5 to e.g. 1979.5 (for 1980*h resolution)
+          In order to get coordinates relative to the original input object, we have the
+          defined and fed (in the vertex buffer) the (fragment-)input variable, io_fragPosition.
+	*/
+
+	/*--->Second homework requirement: make the colour of each pixel change depending
+	  on the x, y or/and z coordinates of that pixel, and time. You may work on a single
+    colour channel, for clarity.
+	*/
+        o_fragColor = io_fragColor;
+    }
+  </script>
+
+  <!-- Homework: Only change above ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^.
+       But please read below to understand the program.
+    -->
+
+  <!-- An external script which contains matrix operations, like multiplication,
+       creating projection matrices or rotation matrices.
+    -->
+  <script src="./WebGL_ Shaders_files/MatrixOperations.js.download"></script>
+
+  <!-- We use the webgl-utils library from https://webglfundamentals.org, which,
+       among other things, implements easy shader compiling and linking.
+    -->
+  <script>console.log('webglfundamentals.org contains more in-depth tutorials. We use their very helpful library:') </script>
+  <script src="./WebGL_ Shaders_files/webgl-utils.js.download"></script>
+  <script>console.log('------------------------------------------------------------')</script>
+
+
+  <!-- The main WebGL program.-->
+  <script>
+    "use strict";
+    function main() {
+	//We search for the canvas by id.
+	var canvas = document.querySelector("#canvas");
+	/*We request a WebGL version 2 drawing context.
+	  We need at least version 2 to support the GLSL version 3.00 shaders we use.
+	*/
+	var gl = canvas.getContext("webgl2");
+	//If we somehow can't get the requested gl context, exit.
+	if (!gl) {
+	    console.log('Could not get the requested webgl2 context.');
+	    return;
+	}
+	//Compile and link the shaders.
+	var program = webglUtils.createProgramFromScripts(gl, ["vertex-shader", "fragment-shader"]);
+	//Look up where the input variables go into the shaders, so we can, later on, write into them.
+	var positionLocation = gl.getAttribLocation(program, "i_vertPosition");
+	var colorLocation = gl.getAttribLocation(program, "i_vertColor");
+	//Look up where the uniform variables go into the shaders.
+	const matrix4Location = gl.getUniformLocation(program, "u_matrix4");
+	const lVertexTime   = gl.getUniformLocation(program, "u_vertexTime");
+	const lFragmentTime   = gl.getUniformLocation(program, "u_fragmentTime");
+	//Let's log the locations. None should be -1.
+	console.log("positionLocation", positionLocation);
+	console.log("colorLocation", colorLocation);
+	console.log("matrix4Location", matrix4Location);	
+	console.log("vertTimeLocation", lVertexTime);
+	console.log("fragTimeLocation", lFragmentTime);
+	//Enable depth testing, to have depth and have closer objects obscure farther objects.
+	gl.enable(gl.DEPTH_TEST);
+	gl.depthFunc(gl.LEQUAL);
+	
+	//We store the following information about each object:
+	/*Vertex buffer: the 'pointer' to the GPU-side RAM where the geometry information
+	  of that object has been uploaded.
+	*/
+	var vertexBuffers = Array.from.call({}, { length: 0, 0: 0 });
+	//Same for color.
+	var colorBuffers  = Array.from.call({}, { length: 0, 0: 0 });
+	//We need to know how many vertices are stored. Basically, array size.
+	var counts = Array.from.call({}, { length: 0, 0: 0 });
+	//The position of the object in the scene.
+	var positions = Array.from.call({}, { length: 0, 0: 0.0 });
+	/*Where the centre is, relative to an object's own coordinates.
+	  We need this for rotation, as we rotate around the centre of the object.
+	*/
+	var centres = Array.from.call({}, { length: 0, 0: 0.0 });
+	/*The basic rotation the object is in, aroud its centre.
+	 */
+	var orientations = Array.from.call({}, { length: 0, 0: 0.0 });
+	//We currently don't simulate object translation according to speed.
+	var speeds = Array.from.call({}, { length: 0, 0: 0.0 });
+	//The scaling factors, per dimension, of the object.
+	var scales = Array.from.call({}, { length: 0, 0: 0.0 });
+
+	//Let's add 20 cubes.
+	for(var ii = 0; ii < 20; ++ii) {
+	    //The side of the cube should be 0.3 units in length (our screen is ~~ 2 units in width).
+	    addCube(0.3);
+	    //Math.random() is in [0, 1]
+	    //Random x, y positions between -0.7 and +0.7.
+	    positions[ii * 3 + 0] = (Math.random() - 0.5) * 1.4;
+	    positions[ii * 3 + 1] = (Math.random() - 0.5) * 1.4;
+	    positions[ii * 3 + 2] = -(10 + Math.random() * 8);//z lies between 10 and 20, but we also negate it so it works with the projection matrices.
+	    /*The orientation is of the form: angleInRadians, rx, ry, rz
+	      Where r* are the vector around which rotation is performed.
+	      They need not be normalised here, as they are normalised
+	      in the rotation matrix.
+	    */
+	    orientations[ii * 4 + 0] = (Math.random() - 0.5) * 2.0 * 6.28;
+	    orientations[ii * 4 + 1] = Math.random() - 0.5;
+	    orientations[ii * 4 + 2] = Math.random() - 0.5;
+	    orientations[ii * 4 + 3] = Math.random() - 0.5;
+	}
+	/*Draw the first frame. The drawScene function contains further calls,
+	  so this basically starts the drawing loop.
+	*/
+	window.requestAnimationFrame(drawScene);
+
+	//That's it for the main() function. Below are function definitions.
+	
+	function addObject() {
+	    /*Add a basic object, without actual vertices.
+	      We use this to allocate buffers and pointers.
+	    */
+	    //Allocate a buffer on the GPU, and get the pointer.
+	    var t = gl.createBuffer();
+	    //Use that buffer as the vertex buffer.
+	    vertexBuffers.push( t );
+	    t = gl.createBuffer();
+	    //Another buffer for colors.
+	    colorBuffers.push( t );
+	    //We have 0 vertices.
+	    counts.push(0);
+	    //And the centre is not offset.
+	    centres.push(0, 0, 0);
+	    //No orientation.
+	    orientations.push(0, 0, 0, 0);
+	    //No scale change.
+	    scales.push(1, 1, 1);
+	    //And no position or speed.
+	    positions.push(0, 0, 0);
+	    speeds.push(0, 0, 0);
+	}
+
+	function rectangleToTriangles(vrectangle, crectangle) {
+	    /*This function transforms a rectangle into two triangles.
+	      It correlates vertex coordinates and vertex colors.
+	    */
+	    var v = vrectangle;
+	    var c = crectangle;
+	    var va = Array.from.call({}, { length: 0, 0: 0.0 });
+	    var ca = Array.from.call({}, { length: 0, 0: 0.0 });
+	    //First triangle.
+	    va.push(...v[0]); ca.push(...c[0]);
+	    va.push(...v[1]); ca.push(...c[1]);
+	    va.push(...v[2]); ca.push(...c[2]);
+	    //Second triangle.
+	    va.push(...v[2]); ca.push(...c[2]);
+	    va.push(...v[3]); ca.push(...c[3]);
+	    va.push(...v[0]); ca.push(...c[0]);
+	    return [va, ca];
+	}
+	
+	function addCube(sideLength) {
+	    //Add a cube, as an object, according to its length.
+	    //First, add the object, which allocates memory.
+	    addObject();
+	    var l = sideLength;
+	    var va = Array.from.call({}, { length: 0, 0: 0.0 });
+	    var ca = Array.from.call({}, { length: 0, 0: 0.0 });
+	    var v, c;
+	    //Generate the coordinates of each face and convert it to triangles.
+	    //Geometry generation --------------------------------------------
+	    [v, c] = rectangleToTriangles([
+		[0, 0, 0,],
+		[0, 0, l,],
+		[0, l, l,],
+		[0, l, 0,],
+	    ],
+					  [
+					      [0.1, 0.1, 0.1, 1],
+					      [0.1, 0.1, 0.9, 1],
+					      [0.1, 0.9, 0.9, 1],
+					      [0.1, 0.9, 0.1, 1],
+					  ]);
+	    va.push(...v);
+	    ca.push(...c);
+	    [v, c] = rectangleToTriangles([
+		[0, 0, 0,],
+		[l, 0, 0,],
+		[l, 0, l,],
+		[0, 0, l,],
+	    ],
+					  [
+					      [0.1, 0.1, 0.1, 1],
+					      [0.9, 0.1, 0.1, 1],
+					      [0.9, 0.1, 0.9, 1],
+					      [0.1, 0.1, 0.9, 1],		     
+					  ]);
+	    va.push(...v);
+	    ca.push(...c);
+	    [v, c] = rectangleToTriangles([
+		[0, 0, 0,],
+		[l, 0, 0,],
+		[l, l, 0,],
+		[0, l, 0,],
+	    ],
+					  [
+					      [0.1, 0.1, 0.1, 1],
+					      [0.9, 0.1, 0.1, 1],
+					      [0.9, 0.9, 0.1, 1],
+					      [0.1, 0.9, 0.1, 1],
+					  ]);
+	    va.push(...v);
+	    ca.push(...c);
+	    [v, c] = rectangleToTriangles([
+		[l, l, l,],
+		[0, l, l,],
+		[0, 0, l,],
+		[l, 0, l,],
+	    ],
+					  [
+					      [0.9, 0.9, 0.9, 1],
+					      [0.1, 0.9, 0.9, 1],
+					      [0.1, 0.1, 0.9, 1],
+					      [0.9, 0.1, 0.9, 1],
+					  ]);
+	    va.push(...v);
+	    ca.push(...c);
+	    [v, c] = rectangleToTriangles([
+		[l, l, l,],
+		[0, l, l,],
+		[0, l, 0,],
+		[l, l, 0,],
+	    ],
+					  [
+					      [0.9, 0.9, 0.9, 1],
+					      [0.1, 0.9, 0.9, 1],
+					      [0.1, 0.9, 0.1, 1],
+					      [0.9, 0.9, 0.1, 1],
+					  ]);
+	    va.push(...v);
+	    ca.push(...c);
+	    [v, c] = rectangleToTriangles([
+		[l, l, l,],
+		[l, l, 0,],
+		[l, 0, 0,],
+		[l, 0, l,],
+	    ],
+					  [
+					      [0.9, 0.9, 0.9, 1],
+					      [0.9, 0.9, 0.1, 1],
+					      [0.9, 0.1, 0.1, 1],
+					      [0.9, 0.1, 0.9, 1],
+					  ]);
+	    va.push(...v);
+	    ca.push(...c);
+	    //Geometry generation end ---------------------------------------
+	    //Create 'static' rigidly typed arrays as preparation for memory copy.
+	    var vt = new Float32Array(va);
+	    var ct = new Float32Array(ca);
+	    //We are refering to the last created object.
+	    var pos = vertexBuffers.length - 1;
+	    //Bind the vertex buffer pointer as the pointer in current operation.
+	    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffers[pos]);
+	    /*Copy the data from our array to the buffer on the GPU.
+	      ARRAY_BUFFER means our data is in a linear structure, an array.
+	      STATIC_DRAW means:
+  	      STATIC: the memory will not change (or very rarely),
+	      DRAW: the memory will be accessed very often, perhaps every frame.
+	    */
+	    gl.bufferData(gl.ARRAY_BUFFER, vt, gl.STATIC_DRAW);
+	    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffers[pos]);
+	    gl.bufferData(gl.ARRAY_BUFFER, ct, gl.STATIC_DRAW);
+	    //Since vertices are 3D, each vertex has 3 coordinates.
+	    counts[pos] = va.length / 3;
+	    /*The centre of the cube is at (l/2, l/2, l/2).
+	     */
+	    centres[pos * 3] = l/2;
+	    centres[pos * 3 + 1] = l/2;
+	    centres[pos * 3 + 2] = l/2;
+	}
+	
+	function renderObject(vertexBuffer, colorBuffer, count) {
+	    /*Render an object, given the pointer ot the vertex buffer, the color buffer,
+	      and the vertex count.
+	    */
+	    //Vertex position information will be used.
+	    gl.enableVertexAttribArray(positionLocation);
+	    //Set the vertexBuffer as the active buffer.
+	    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+	    //The vertex position is 3D.
+	    var size = 3;
+	    //Data type is float. This is equivalent to GLfloat in OGL. (32-bit IEEE-754).
+	    var type = gl.FLOAT;
+	    //Don't normalize coordinates.
+	    var normalize = false;
+	    /*How much positions to skip between vertices. This is used for interleaving
+	      other data among position data in the same memory buffer. It's more efficient,
+	      but harder to understand in tutorials, so we're not doing that.
+	    */
+	    var stride = 0;
+	    /*How much positions to skip at the start. Also used for interleaving, if the data
+	      is not the first in the vector.
+	    */
+	    var offset = 0;
+	    //As we now know the structure of the buffer, assign it to rendering.
+	    gl.vertexAttribPointer(
+		positionLocation, size, type, normalize, stride, offset);
+
+	    //Same with colors.
+	    gl.enableVertexAttribArray(colorLocation);
+	    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+	    //Colors are rgba.
+	    var size = 4;
+	    var type = gl.FLOAT;
+	    var normalize = false;
+	    var stride = 0;
+	    var offset = 0;
+	    gl.vertexAttribPointer(
+		colorLocation, size, type, normalize, stride, offset);
+	    //What are the vertices describing?
+	    var primitiveType = gl.TRIANGLES;
+	    /*Start with which vertex? Especially if vertices are sorted
+	      according to geometric place, we can restrict offset and count
+	      and render a slice of the buffer to render a part of the object.
+	    */
+	    var offset = 0;
+	    //Actually render the object.
+	    gl.drawArrays(primitiveType, offset, count);
+	}
+	
+	function drawScene(timestamp = 0) {
+	    /*Draw the scene. Receive a timestamp from the browser to know
+	      how much time has passed, we can advance animations smoothly.
+	    */
+	    /*Attach our shading program.
+	      This needs to be done before setting uniforms.
+	    */
+	    gl.useProgram(program);
+	    //Let's slow down time some.
+	    var scaleTime = 1.0 / 2000.0;
+	    var simtime = timestamp * scaleTime;
+	    //Send simulation time to the shaders.
+	    gl.uniform1f(lVertexTime, simtime);
+	    gl.uniform1f(lFragmentTime, simtime);
+	    //Fit canvas and actual webgl display surface.
+	    webglUtils.resizeCanvasToDisplaySize(gl.canvas);
+	    //Set the viewport to canvas size.
+	    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+	    //Set the aspect ratio multipliers for x and y.
+	    var aspectRatioX = gl.canvas.width / gl.canvas.height;
+	    var aspectRatioY = 1;
+	    //Clear the canvas to the default colour (opaque white).
+	    gl.clear(gl.COLOR_BUFFER_BIT);
+	    
+	    /*The projection matrix is the last to apply, logically.
+	      Since matrix multiplication is prepended, we compute it _first_.
+	    */
+	    /*left, right, bottom, top, near, far. Near and far need to be positive.
+	      Also, near/far should be near to 1, rathern than near to 0,
+	      to maintain depth precision. 0, 13 is worse than 9, 22.
+	    */
+	    var transformationMatrix = MatrixOperations.projectionMatrixFrustum(-1 * aspectRatioX, 1 * aspectRatioX, -1 * aspectRatioY, 1 * aspectRatioY, 9, 22);
+	    //var transformationMatrix = MatrixOperations.projectionMatrixOrtho(-1 * aspectRatioX, 1 * aspectRatioX, -1 * aspectRatioY, 1 * aspectRatioY, 9, 22);
+
+	    //Draw the geometry, object-by-object.
+	    for(var ii = 0; ii < counts.length; ++ii) {
+		/*As we'll modify the matrix with object-specific transformations,
+		  we save the general matrix.
+		*/
+		var pushMatrix = transformationMatrix;
+		//Since we often have 3 components per object, pre-multiply. 
+		var pos = ii * 3;
+		//Below are the transformations in logical order.
+		/*Move the object so that the centre of the object is in (0, 0, 0),
+		  so we can rotate around the centre.
+		*/
+		var translateByMinusCentre = MatrixOperations.translationMatrix(-centres[pos], -centres[pos + 1], -centres[pos + 2]);
+		//Rotate around the centre. The angle advances by simtime, so we can animate rotation.
+		var rotateAroundCentre = MatrixOperations.rotationMatrix(orientations[ii * 4 + 0] * (1+simtime), orientations[ii * 4 + 1], orientations[ii * 4 + 2], orientations[ii * 4 + 3]);
+		//Translated the object back to its original offset.
+		var translateByPlusCentre = MatrixOperations.translationMatrix(centres[pos], centres[pos + 1], centres[pos + 2]);
+		//And translate the object to its position in the scene.
+		var translateIntoPosition = MatrixOperations.translationMatrix(positions[pos + 0], positions[pos + 1], positions[pos + 2]);
+		/*Since matrix multiplication is prefixed,
+		  multiply the transformations in inverse logical order.
+		*/
+		transformationMatrix = MatrixOperations.mul(translateIntoPosition, transformationMatrix);
+		transformationMatrix = MatrixOperations.mul(translateByPlusCentre, transformationMatrix);
+		transformationMatrix = MatrixOperations.mul(rotateAroundCentre, transformationMatrix);
+		transformationMatrix = MatrixOperations.mul(translateByMinusCentre, transformationMatrix);
+		//Send the transformation matrix to the (vertex) shader.
+		gl.uniformMatrix4fv(matrix4Location, false, transformationMatrix);
+		//Render the object.
+		renderObject(vertexBuffers[ii], colorBuffers[ii], counts[ii]);
+		//pop matrix. Restore the matrix with only general scene information.
+		transformationMatrix = pushMatrix;
+	    }
+	    /*Request the next frame;
+	      whenever the window things it necessary it will call the function.
+	      Thus we set-up the draw loop.
+	    */
+	    window.requestAnimationFrame(drawScene);
+	}
+    }
+    
+    //Call the main function.
+    main();
+  </script>
+
+
+
+</body><!--- Homework: Only change below vvvvvvvvvvvvvvvvvvvvvvvv --><!-- vertex shader --></html>
