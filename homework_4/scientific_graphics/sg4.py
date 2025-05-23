@@ -235,7 +235,16 @@ class OglSimpleRenderer():
     def display(self):
         dt = self.getDt()
         if not self.paused:
-            accel = [0, 0, -10]#gravity
+
+
+
+
+            accel = [0, 0, -30]  # stronger gravity pulls down faster
+
+
+
+            #accel = [0, 0, -10]#gravity
+
             if self.shake:
                 self.shake = False
                 #The speed we want to add if the accel were to act for a whole second.
@@ -273,61 +282,64 @@ class OglSimpleRenderer():
 
 
 
-    def integrate(self, obj, accel = [0, 0, 0], dt = 1, collisionElasticity = 0.99, collisionFriction = 0.002):
-        '''Integrate the motion of the object, taking into account acceleration, speed, position, and time.
-        Also, compute collision with the scene (self.sceneVolume[]).
-        collisionElasticity means: how much of the speed is preserved in the direction which caused the collision.
-        collisionFriction means: how much of the speed is lost in the *other* directions.'''
-        # Unpack object parameters
-        vertVbo, colVbo, l, cc, primitive, pos, vel, center = obj
-        minX, maxX, minY, maxY, minZ, maxZ = self.sceneVolume
+    def integrate(self, obj,
+                  accel     = [0,0,0],
+                  dt        = 1,
+                  collisionElasticity = 0.8,   # less bouncy
+                  collisionFriction   = 0.2,   # more energy lost each bounce
+                  airFriction         = 0.2):  # stronger continuous drag
 
-        # 1 & 2: Semi-implicit (symplectic) Euler integration
-        # Update velocity from acceleration
+        """
+        Semi-implicit Euler + box collisions + drag + floor rest.
+        """
+        # unpack
+        vertVbo, colVbo, l, cc, primitive, pos, vel, center = obj
+        minX, maxX, minY, maxY, minZ, maxZ   = self.sceneVolume
+
+        # 1) velocity ← velocity + accel·dt
         vel[0] += accel[0] * dt
         vel[1] += accel[1] * dt
         vel[2] += accel[2] * dt
-        # Update position from updated velocity
+
+        # 2) position ← position + velocity·dt
         pos[0] += vel[0] * dt
         pos[1] += vel[1] * dt
         pos[2] += vel[2] * dt
 
-        # 4 & 5: Collision with bounding box and response
-        # Check X boundaries
-        if pos[0] < minX + center[0]:
-            pos[0] = minX + center[0]
-            vel[0] = -vel[0] * collisionElasticity
-            vel[1] *= (1 - collisionFriction)
-            vel[2] *= (1 - collisionFriction)
-        elif pos[0] > maxX - center[0]:
-            pos[0] = maxX - center[0]
-            vel[0] = -vel[0] * collisionElasticity
-            vel[1] *= (1 - collisionFriction)
-            vel[2] *= (1 - collisionFriction)
-        # Check Y boundaries
-        if pos[1] < minY + center[1]:
-            pos[1] = minY + center[1]
-            vel[1] = -vel[1] * collisionElasticity
-            vel[0] *= (1 - collisionFriction)
-            vel[2] *= (1 - collisionFriction)
-        elif pos[1] > maxY - center[1]:
-            pos[1] = maxY - center[1]
-            vel[1] = -vel[1] * collisionElasticity
-            vel[0] *= (1 - collisionFriction)
-            vel[2] *= (1 - collisionFriction)
-        # Check Z boundaries
-        if pos[2] < minZ + center[2]:
-            pos[2] = minZ + center[2]
-            vel[2] = -vel[2] * collisionElasticity
-            vel[0] *= (1 - collisionFriction)
-            vel[1] *= (1 - collisionFriction)
-        elif pos[2] > maxZ - center[2]:
-            pos[2] = maxZ - center[2]
-            vel[2] = -vel[2] * collisionElasticity
-            vel[0] *= (1 - collisionFriction)
-            vel[1] *= (1 - collisionFriction)
-        # Store updated velocity back
+        # 3) collisions on X, Y, Z
+        #    clamp pos to walls, reflect normal vel with 'elasticity', apply 'friction' to the other two axes
+        def collide_axis(i, mn, mx):
+            c = center[i]
+            if pos[i] < mn + c:
+                pos[i] = mn + c
+                vel[i] = -vel[i] * collisionElasticity
+                # friction on the other two axes
+                for j in (x for x in (0,1,2) if x!=i):
+                    vel[j] *= (1 - collisionFriction)
+            elif pos[i] > mx - c:
+                pos[i] = mx - c
+                vel[i] = -vel[i] * collisionElasticity
+                for j in (x for x in (0,1,2) if x!=i):
+                    vel[j] *= (1 - collisionFriction)
+
+        collide_axis(0, minX, maxX)
+        collide_axis(1, minY, maxY)
+        collide_axis(2, minZ, maxZ)
+
+        # 4) continuous drag (air resistance)
+        drag_factor = max(0.0, 1 - airFriction * dt)
+        vel[0] *= drag_factor
+        vel[1] *= drag_factor
+        vel[2] *= drag_factor
+
+        # 5) floor rest: if essentially on bottom and almost stopped, zero out
+        floor_z = minZ + center[2]
+        if abs(pos[2] - floor_z) < 1e-3 and abs(vel[2]) < 1e-2:
+            vel[:] = [0.0, 0.0, 0.0]
+
+        # write back
         obj[6] = vel
+
 
 
 
@@ -410,6 +422,11 @@ def main():
     #half-length of a side
     hl = 10
     speed = hl
+
+    # Make the speed at the beginning faster.
+    speed = hl * 10
+
+
     sceneVolume = [-hl, hl, -hl, hl, -hl, hl]
     cubePoints = genCube()
     cubeVert = resizeCube(cubePoints, 2 * hl)
