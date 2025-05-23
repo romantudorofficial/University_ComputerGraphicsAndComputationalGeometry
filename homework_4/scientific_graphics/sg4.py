@@ -251,13 +251,13 @@ class OglSimpleRenderer():
         for o in self.objects:
             self.render(o)
 
-    def integrate(self, obj, accel = [0, 0, 0], dt = 1, collisionElasticity = 0.99, collisionFriction = 0.002):
-        '''Integrade the motion of the object, taking into account acceleration, speed, position, and time.
-        Also, compute collision with the scene (self.sceneVolume[]).
-        collisionElasticity means: how much of the speed is preserved in the direction which caused the collision.
-        collisionPlasticity means: how much of the speed is lost in the *other* directions.'''
-        _, _, _, _, _, pos, vel, c = obj
-        #Homework tasks:
+    #def integrate(self, obj, accel = [0, 0, 0], dt = 1, collisionElasticity = 0.99, collisionFriction = 0.002):
+    #    '''Integrade the motion of the object, taking into account acceleration, speed, position, and time.
+    #    Also, compute collision with the scene (self.sceneVolume[]).
+    #    collisionElasticity means: how much of the speed is preserved in the direction which caused the collision.
+    #    collisionPlasticity means: how much of the speed is lost in the *other* directions.'''
+    #    _, _, _, _, _, pos, vel, c = obj
+    #    #Homework tasks:
         #1) (1p) Integrate the speed of each object, so that the speed changes position.
         #2) (1p) Also integrate the acceleration, so it influences speed.
         #3) (1p) Do a correct integration with the above, e.g. semi-implicit Euler (also called symplectic Euler)
@@ -265,6 +265,77 @@ class OglSimpleRenderer():
         #        speed be updated first, and then position (using the updated speed).
         #4) (1p) Do particle collision with the bounding box.
         #5) (1p) Apply collision elasticity (0.5p) and collision friction (0.5p).
+
+
+
+
+
+
+
+
+    def integrate(self, obj, accel = [0, 0, 0], dt = 1, collisionElasticity = 0.99, collisionFriction = 0.002):
+        '''Integrate the motion of the object, taking into account acceleration, speed, position, and time.
+        Also, compute collision with the scene (self.sceneVolume[]).
+        collisionElasticity means: how much of the speed is preserved in the direction which caused the collision.
+        collisionFriction means: how much of the speed is lost in the *other* directions.'''
+        # Unpack object parameters
+        vertVbo, colVbo, l, cc, primitive, pos, vel, center = obj
+        minX, maxX, minY, maxY, minZ, maxZ = self.sceneVolume
+
+        # 1 & 2: Semi-implicit (symplectic) Euler integration
+        # Update velocity from acceleration
+        vel[0] += accel[0] * dt
+        vel[1] += accel[1] * dt
+        vel[2] += accel[2] * dt
+        # Update position from updated velocity
+        pos[0] += vel[0] * dt
+        pos[1] += vel[1] * dt
+        pos[2] += vel[2] * dt
+
+        # 4 & 5: Collision with bounding box and response
+        # Check X boundaries
+        if pos[0] < minX + center[0]:
+            pos[0] = minX + center[0]
+            vel[0] = -vel[0] * collisionElasticity
+            vel[1] *= (1 - collisionFriction)
+            vel[2] *= (1 - collisionFriction)
+        elif pos[0] > maxX - center[0]:
+            pos[0] = maxX - center[0]
+            vel[0] = -vel[0] * collisionElasticity
+            vel[1] *= (1 - collisionFriction)
+            vel[2] *= (1 - collisionFriction)
+        # Check Y boundaries
+        if pos[1] < minY + center[1]:
+            pos[1] = minY + center[1]
+            vel[1] = -vel[1] * collisionElasticity
+            vel[0] *= (1 - collisionFriction)
+            vel[2] *= (1 - collisionFriction)
+        elif pos[1] > maxY - center[1]:
+            pos[1] = maxY - center[1]
+            vel[1] = -vel[1] * collisionElasticity
+            vel[0] *= (1 - collisionFriction)
+            vel[2] *= (1 - collisionFriction)
+        # Check Z boundaries
+        if pos[2] < minZ + center[2]:
+            pos[2] = minZ + center[2]
+            vel[2] = -vel[2] * collisionElasticity
+            vel[0] *= (1 - collisionFriction)
+            vel[1] *= (1 - collisionFriction)
+        elif pos[2] > maxZ - center[2]:
+            pos[2] = maxZ - center[2]
+            vel[2] = -vel[2] * collisionElasticity
+            vel[0] *= (1 - collisionFriction)
+            vel[1] *= (1 - collisionFriction)
+        # Store updated velocity back
+        obj[6] = vel
+
+
+
+
+
+
+
+
         
     def render(self, obj):
         vertVbo, colVbo, l, cc, primitive, pos, _, _ = obj
