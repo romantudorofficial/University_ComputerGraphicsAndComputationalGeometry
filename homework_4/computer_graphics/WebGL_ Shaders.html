@@ -20,107 +20,73 @@
 
   
 
-  
-  <script id="vertex-shader" type="x-shader/x-vertex"># version 300 es
-    //The version number needs to be the absolute first line.^^^^^^^
 
-    //The vertex shader is called once per vertex.
-    
-    /*precision controls the precision of the computations done by the GPU,
-      and also their speed.
-    */
-    precision mediump float;
-    //M_PI is not defined in GLSL.	
-    #define M_PI 3.1415926535897932384626433832795
-    /*An uniform(constant across all vertices) input from which
-      we receive the transformation matrix.
-    */
-    uniform mat4 u_matrix4;
-    //An uniform input from which we receive a clock.	
-    uniform float u_vertexTime;
-    /*A varying(changing across all vertices) input	giving us the position of each vertex.
-      Bound and set below, in the JS script's rendering process.
-    */
-    in vec3 i_vertPosition;
-    //A varying input	giving us the color of each vertex.
-    in vec4 i_vertColor;
-    //Two output variables which will be automatically passed by name in the next shader.
-    out vec4 io_fragPosition;
-    out vec4 io_fragColor;
-    
-    void main() {
-	/*Add the homogenous coordinate.
-	  i_vertPosition has: .x, .y, .z.
-	  pos has the same x, y, z, and pos.w == 1
-	  Vectors can be accessed like pos[1] == pos.y.
-	  Constructors are flexible, as seen below: vec4(vec3, scalar);
-	  could also be e.g.: vec4(vec2, vec2).
-	*/
-	vec4 pos = vec4(i_vertPosition, 1);
 
-	/*Apply the matrix transformation; since this matrix contains our projection
-	  and model transformation, each vertex is now in its proper place in the scene.
-	*/
-	pos *= u_matrix4;
-	float rad = 3.0;
-	/*Let's manipulate the y coordinate, and make the objects bounce by a sin().
-	  Since sin() is smooth and periodic, this yields a smooth uninterrupted animation.
-	*/
-	pos.y += rad * cos(u_vertexTime * M_PI);
-	/*--->First homework requirement: make the cubes move in a circular trajectory
-	  (circle or ellipse) instead of just bouncing up and down.
-	*/
-	/*gl_Position is the output variable where OpenGL looks for final vertex coordinates.
-	  Don't declare it as an 'out', it's implicit.
-	  n.b.: it is _not_ gl_position, but gl_Position.
-	*/
-	gl_Position = pos;
-	//We also pass the original coordinates and color to the next shader.
-	io_fragPosition = vec4(i_vertPosition, 1);
-	vec4 rgba = i_vertColor;
-	/*We could do some per-vertex color manipulation here.
-	  Otherwise, we might as well io_fragColor = i_vertColor;
-	*/
-	io_fragColor = rgba;
 
-    }
-  </script>
-
-  <!-- fragment shader -->
-  <script id="fragment-shader" type="x-shader/x-fragment"># version 300 es
-    /*The fragment shader is called once or pultiple times per pixel displayed on screen.
-      You can think of a fragment as a pixel candidate - it could be displayed as a pixel,
-      or it could be discarded later due to e.g. depth desting.
-    */
+<script id="vertex-shader" type="x-shader/x-vertex">#version 300 es
+precision mediump float;
 #define M_PI 3.1415926535897932384626433832795
-    precision mediump float;
-    /*We use the same time as in the vertex shader; however	since this is a different
-      shader, we need to have a different variable.	
-    */
-    uniform float u_fragmentTime;
-    //Here we receive the variables from the vertex shader. It is enough that they are named the same for OpenGL to pass them. However, as there are far more fragments than vertices, OpenGL also interpolates them!	
-    in vec4 io_fragPosition;
-    in vec4 io_fragColor;
-    //We define a variable which will be asigned as the color for the fragment. The first out vec4 variable will be understood by OpenGL as being the colour.
-    out vec4 o_fragColor;
-    //We can also be very explicit with the memory location.
-    //layout(location = 0 ) out vec4 o_fragColor;
-    //The pre-defined gl_FragColor is deprecated, don't use it.  
-    
-    void main() {
-	/*We also have the pre-defined gl_FragCoord: vec4, which gives fragment coordinates
-          in window pixels, floating point. x from -0.5 to e.g. 1979.5 (for 1980*h resolution)
-          In order to get coordinates relative to the original input object, we have the
-          defined and fed (in the vertex buffer) the (fragment-)input variable, io_fragPosition.
-	*/
 
-	/*--->Second homework requirement: make the colour of each pixel change depending
-	  on the x, y or/and z coordinates of that pixel, and time. You may work on a single
-    colour channel, for clarity.
-	*/
-        o_fragColor = io_fragColor;
-    }
-  </script>
+uniform mat4 u_matrix4;
+uniform float u_vertexTime;
+
+in vec3 i_vertPosition;
+in vec4 i_vertColor;
+
+out vec4 io_fragPosition;
+out vec4 io_fragColor;
+
+void main() {
+    // original model+view+projection
+    vec4 pos = vec4(i_vertPosition, 1.0) * u_matrix4;
+
+    // 1) extra‐large circular orbit:
+    float radiusX = 1.5;   // much larger than 1.0
+    float radiusY = 1.5;   // keep it symmetric
+    float angle   = u_vertexTime * M_PI * 2.0;
+    pos.x += radiusX * cos(angle);
+    pos.y += radiusY * sin(angle);
+
+    gl_Position = pos;
+
+    // pass local position & color through
+    io_fragPosition = vec4(i_vertPosition, 1.0);
+    io_fragColor    = i_vertColor;
+}
+</script>
+
+
+
+
+<script id="fragment-shader" type="x-shader/x-fragment">#version 300 es
+precision mediump float;
+
+uniform float u_fragmentTime;
+
+out vec4 o_fragColor;
+
+void main() {
+    // map window‐space X into a moving sine‐wave [0,1]
+    float freq  = 0.1;                  // higher → stripes closer
+    float speed = 4.0;                  // faster motion
+    float f     = 0.5 + 0.5 * sin(gl_FragCoord.x * freq + u_fragmentTime * speed);
+
+    // create a narrow band near f≈1.0, with soft edges
+    float edgeFeather = 0.02;           // softness
+    float stripeStart = 0.90;           // how early the red starts
+    float stripe = smoothstep(stripeStart - edgeFeather,
+                              stripeStart + edgeFeather, f);
+
+    // black background with blurred red stripes
+    o_fragColor = vec4(stripe, 0.0, 0.0, 1.0);
+}
+</script>
+
+
+
+
+
+
 
   <!-- Homework: Only change above ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^.
        But please read below to understand the program.
