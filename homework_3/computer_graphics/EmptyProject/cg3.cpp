@@ -217,342 +217,574 @@ void Display1() {
 
 
 
-// Task 1
+// Task 1 - Scene 1
 
-// --- exact match to Display1, but decomposed into pure‑axis calls ---
-void Display2() {
+void Display2 ()
+{
+	// Set the color of the text to black.
     glColor3f(0, 0, 0);
-    drawBitmapString(
-        "Display2: instant decomposition (press '2')",
-        -0.95f, -0.95f
-    );
+
+	// Display the text "Task 1 - Scene 1" at the bottom left corner of the window.
+    drawBitmapString("Task 1 - Scene 1", -0.95f, -0.95f);
+
+	// Advance the animation time.
     advanceAnimationTime();
 
-    // set up ortho projection
+	// Set up the orthographic projection matrix.
     glMatrixMode(GL_PROJECTION);
-    glPushMatrix();    // P0
+
+	// Push the current projection matrix onto the stack.
+    glPushMatrix();
+
+	// Load the identity matrix into the projection matrix.
     glLoadIdentity();
-    glOrtho(-2, 2, -2, 2,
-        g_sceneDepth - g_sceneZRadius,
-        g_sceneDepth + g_sceneZRadius);
+
+	// Set up the orthographic projection with the specified parameters (left, right, bottom, top, near, far).
+    glOrtho(-2, 2, -2, 2, g_sceneDepth - g_sceneZRadius, g_sceneDepth + g_sceneZRadius);
+
+	// Switch to the model view matrix.
     glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();    // M0
-    // same view as Display1
+
+	// Push the current model view matrix onto the stack.
+    glPushMatrix();
+
+	// Translate the model view matrix to the camera position.
     glTranslated(0, 0, -g_sceneDepth);
+
+	// Rotate the model view matrix by 20 degrees around the X-axis.
     glRotated(20, 1, 0, 0);
+
+	// Rotate the model view matrix by -45 degrees around the Y-axis.
     glRotated(-45, 0, 1, 0);
 
+	// Draw the axes in the scene.
     drawAxes();
 
-    // 1) align diagonal to Z: yaw +45° about Y
+	// Declare the angle of rotation around the Y-axis.
     const double angY = 45.0;
+
+	// Rotate the model view matrix by the specified angle around the Y-axis.
     glRotated(angY, 0, 1, 0);
-    // 2) pitch –35.264° about X
-    const double angX = atan(1.0 / sqrt(2.0)) * rad2deg; // ≈35.264
+
+	// Declare the angle of rotation around the X-axis.
+    const double angX = atan(1.0 / sqrt(2.0)) * rad2deg;
+
+	// Rotate the model view matrix by the specified angle around the X-axis.
     glRotated(-angX, 1, 0, 0);
 
-    // 3) spin about Z by full animation angle
+	// Rotate the model view matrix by the animation progress around the Z-axis.
     glRotated(g_animationProgress * 360.0, 0, 0, 1);
 
-    // 4) undo pitch & yaw
+	// Rotate the model view matrix by the negative angle around the Y-axis.
     glRotated(angX, 1, 0, 0);
+
+	// Rotate the model view matrix by the negative angle around the Y-axis.
     glRotated(-angY, 0, 1, 0);
 
+	// Draw the cube at the origin.
     drawCube(1, 0.95f);
 
-    glPopMatrix();     // M0
+	// Pop the current model view matrix from the stack.
+    glPopMatrix();
+
+	// Set up the orthographic projection matrix.
     glMatrixMode(GL_PROJECTION);
-    glPopMatrix();     // P0
+
+	// Pop the projection matrix from the stack.
+    glPopMatrix();
 }
 
 
 
-// Task 1 - bonus
+// Task 1 - Scene 2
 
-void Display3() {
+void Display3 ()
+{
+	// Set the color of the text to black.
     glColor3f(0, 0, 0);
-    drawBitmapString(
-        "Display3: staged decomposition (press '3', Space to un/pause)",
-        -0.95f, -0.95f
-    );
+
+	// Display the text "Task 1 - Scene 2" at the bottom left corner of the window.
+    drawBitmapString("Task 1 - Scene 2", -0.95f, -0.95f);
+
+	// Advance the animation time.
     advanceAnimationTime();
 
-    // === Projection setup ===
+	// Set up the orthographic projection matrix.
     glMatrixMode(GL_PROJECTION);
+
+	// Push the current projection matrix onto the stack.
     glPushMatrix();
+
+	// Load the identity matrix into the projection matrix.
     glLoadIdentity();
-    glOrtho(-2, 2, -2, 2,
-        g_sceneDepth - g_sceneZRadius,
-        g_sceneDepth + g_sceneZRadius);
+
+	// Set up the orthographic projection with the specified parameters (left, right, bottom, top, near, far).
+    glOrtho(-2, 2, -2, 2, g_sceneDepth - g_sceneZRadius, g_sceneDepth + g_sceneZRadius);
+
+	// Switch to the model view matrix.
     glMatrixMode(GL_MODELVIEW);
+
+	// Push the current model view matrix onto the stack.
     glPushMatrix();
-    // same view tilt as Display1/2
+
+	// Translate the model view matrix to the camera position.
     glTranslated(0, 0, -g_sceneDepth);
+
+	// Rotate the model view matrix by 20 degrees around the X-axis.
     glRotated(20, 1, 0, 0);
+
+	// Rotate the model view matrix by -45 degrees around the Y-axis.
     glRotated(-45, 0, 1, 0);
 
-    // draw the cube and decomposition
+	// Declare the angles of rotation around the Y and X axes.
     const double angY = 45.0;
-    const double angX = atan(1.0 / sqrt(2.0)) * rad2deg; // ~35.264°
+    const double angX = atan(1.0 / sqrt(2.0)) * rad2deg;
+
+	// Declare the full rotation angle.
     const double full = 360.0;
+
+	// Declare the animation progress variable.
     double p = fmod(g_animationProgress, 1.0);
 
-    // manual clamp‐in‐[0,1] helper
-    auto phase = [&](double start) {
+	// Define a lambda function to calculate the phase based on the animation progress.
+    auto phase = [&](double start)
+    {
         double t = (p - start) / 0.2;
-        if (t < 0) t = 0; if (t > 1) t = 1;
+        
+        if (t < 0)
+            t = 0;
+        
+        if (t > 1)
+            t = 1;
+        
         return t;
-        };
+    };
 
+	// Declare the rotation angles based on the animation progress.
     double y1 = angY * phase(0.0);
     double x1 = -angX * phase(0.2);
-    double  z = full * phase(0.4);
+    double z = full * phase(0.4);
     double x2 = angX * phase(0.6);
     double y2 = -angY * phase(0.8);
 
+	// Apply the rotations to the model view matrix.
     glRotated(y1, 0, 1, 0);
     glRotated(x1, 1, 0, 0);
     glRotated(z, 0, 0, 1);
     glRotated(x2, 1, 0, 0);
     glRotated(y2, 0, 1, 0);
 
+	// Draw the cube at the origin.
     drawCube(1, 0.95f);
 
-    // draw axes _on top_ and a bit longer, without depth‐test
+	// Disable depth testing to draw the axes on top of the cube.
     glDisable(GL_DEPTH_TEST);
+
+	// Set the line width for the axes.
     glLineWidth(4);
+
+	// Draw the axes in the scene (length = 1.5).
     drawAxes(1.5f);
+
+	// Set the width of the lines for the axes.
     glLineWidth(3);
+
+	// Enable depth testing again.
     glEnable(GL_DEPTH_TEST);
 
+	// Set the color of the axes to black.
     glPopMatrix();
+
+	// Set the color of the text to black.
     glMatrixMode(GL_PROJECTION);
+
+	// Pop the projection matrix from the stack.
     glPopMatrix();
 }
 
 
 
-// Task 2
+// Task 2 - Scene 1
 
-// Task 2a: two cubes seen edge‑on (looks like a blue rectangle)
-// press '4'
-void Display4() {
+void Display4 ()
+{
+	// Set the color of the text to black.
     glColor3f(0, 0, 0);
-    drawBitmapString("Task 2a: edge‑on view (press '4')", -0.95f, -0.95f);
+
+	// Display the text "Task 2 - Scene 1" at the bottom left corner of the window.
+    drawBitmapString("Task 2 - Scene 1", -0.95f, -0.95f);
+
+	// Advance the animation time.
     advanceAnimationTime();
 
-    // set up orthographic projection
+	// Set up the orthographic projection matrix.
     glMatrixMode(GL_PROJECTION);
+
+	// Push the current projection matrix onto the stack.
     glPushMatrix();
+
+	// Load the identity matrix into the projection matrix.
     glLoadIdentity();
-    glOrtho(-2, 2, -2, 2,
-        g_sceneDepth - g_sceneZRadius,
-        g_sceneDepth + g_sceneZRadius);
+
+	// Set up the orthographic projection with the specified parameters (left, right, bottom, top, near, far).
+    glOrtho(-2, 2, -2, 2, g_sceneDepth - g_sceneZRadius, g_sceneDepth + g_sceneZRadius);
+
+	// Switch to the model view matrix.
     glMatrixMode(GL_MODELVIEW);
+
+	// Push the current model view matrix onto the stack.
     glPushMatrix();
-    // move camera back
+
+	// Translate the model view matrix to the camera position.
     glTranslated(0, 0, -g_sceneDepth);
 
-    // No rotation → viewing straight down the Z‑axis
-    // Draw axes: X→right, Y→up, Z→towards us
+	// Draw the axes in the scene (length = 2).
     drawAxes(2.0f);
 
-    // First cube at origin
+	// Draw the first cube at the origin.
     drawCube(1.0f, 1.0f);
 
-    // Second cube immediately to the right, with small gap
+	// Push the current model view matrix onto the stack.
     glPushMatrix();
+
+	// Translate the model view matrix to the right by 1.1 units.
     glTranslatef(1.1f, 0.0f, 0.0f);
+
+	// Rotate the model view matrix by 45 degrees around the Y-axis.
     drawCube(1.0f, 1.0f);
+
+	// Pop the current model view matrix from the stack.
     glPopMatrix();
 
-    glPopMatrix();               // MODELVIEW
+	// Pop the current model view matrix from the stack.
+    glPopMatrix();
+
+	// Set up the orthographic projection matrix.
     glMatrixMode(GL_PROJECTION);
-    glPopMatrix();               // PROJECTION
+
+	// Pop the model view matrix from the stack.
+    glPopMatrix();
 }
 
 
 
+// Task  2 - Scene 2
 
-// Task 2b: same scene, rotated so you peep around the cubes
-// press '5'
-void Display5() {
+void Display5 ()
+{
+	// Set the color of the text to black.
     glColor3f(0, 0, 0);
-    drawBitmapString("Task 2b: slight Y‑rotation (press '5')", -0.95f, -0.95f);
+
+	// Display the text "Task 2 - Scene 2" at the bottom left corner of the window.
+    drawBitmapString("Task 2 - Scene 2", -0.95f, -0.95f);
+
+	// Advance the animation time.
     advanceAnimationTime();
 
-    // orthographic projection
+    // Set up the orthographic projection matrix.
     glMatrixMode(GL_PROJECTION);
+
+	// Push the current projection matrix onto the stack.
     glPushMatrix();
+
+	// Load the identity matrix into the projection matrix.
     glLoadIdentity();
-    glOrtho(-2, 2, -2, 2,
-        g_sceneDepth - g_sceneZRadius,
-        g_sceneDepth + g_sceneZRadius);
+
+	// Set up the orthographic projection with the specified parameters (left, right, bottom, top, near, far).
+    glOrtho(-2, 2, -2, 2, g_sceneDepth - g_sceneZRadius, g_sceneDepth + g_sceneZRadius);
+
+	// Switch to the model view matrix.
     glMatrixMode(GL_MODELVIEW);
+
+	// Push the current model view matrix onto the stack.
     glPushMatrix();
+
+	// Translate the model view matrix to the camera position.
     glTranslated(0, 0, -g_sceneDepth);
 
-    // rotate a little around the Y‑axis (e.g. –10°) so you see both cubes' sides
+	// Rotate the model view matrix by -10 degrees around the Y-axis.
     glRotated(-10.0, 0, 1, 0);
 
-    // draw axes (also rotated)
+	// Draw the axes in the scene (length = 2).
     drawAxes(2.0f);
 
-    // first cube
+	// Draw the first cube at the origin.
     drawCube(1.0f, 1.0f);
 
-    // second cube, same gap
+	// Push the current model view matrix onto the stack.
     glPushMatrix();
+
+	// Translate the model view matrix to the right by 1.1 units.
     glTranslatef(1.1f, 0.0f, 0.0f);
+
+	// Rotate the model view matrix by 45 degrees around the Y-axis.
     drawCube(1.0f, 1.0f);
+
+	// Push the current model view matrix onto the stack.
     glPopMatrix();
 
-    glPopMatrix();               // MODELVIEW
+	// Pop the current model view matrix from the stack.
+    glPopMatrix();
+
+	// Set up the orthographic projection matrix.
     glMatrixMode(GL_PROJECTION);
-    glPopMatrix();               // PROJECTION
+
+	// Pop the model view matrix from the stack.
+    glPopMatrix();
 }
 
 
 
-// Task 3
+// Task 3 - Scene 1
 
-// Task 3a: second cube shorter by Y‑scale (press '6')
-void Display6() {
+void Display6 ()
+{
+	// Set the color of the text to black.
     glColor3f(0, 0, 0);
-    drawBitmapString("Task 3a: cube2 scaled shorter (press '6')", -0.95f, -0.95f);
+
+	// Display the text "Task  3 - Scene 1" at the bottom left corner of the window.
+    drawBitmapString("Task 3 - Scene 1", -0.95f, -0.95f);
+
+	// Advance the animation time.
     advanceAnimationTime();
 
-    // Orthographic setup
+	// Set up the orthographic projection matrix.
     glMatrixMode(GL_PROJECTION);
+
+	// Push the current projection matrix onto the stack.
     glPushMatrix();
+
+	// Load the identity matrix into the projection matrix.
     glLoadIdentity();
-    glOrtho(-2, 2, -2, 2,
-        g_sceneDepth - g_sceneZRadius,
-        g_sceneDepth + g_sceneZRadius);
+
+	// Set up the orthographic projection with the specified parameters (left, right, bottom, top, near, far).
+    glOrtho(-2, 2, -2, 2, g_sceneDepth - g_sceneZRadius, g_sceneDepth + g_sceneZRadius);
+
+	// Switch to the model view matrix.
     glMatrixMode(GL_MODELVIEW);
+
+	// Push the current model view matrix onto the stack.
     glPushMatrix();
+
+	// Translate the model view matrix to the camera position.
     glTranslated(0, 0, -g_sceneDepth);
 
-    // Draw axes
+	// Draw the axes in the scene (length = 2).
     drawAxes(2.0f);
 
-    // First cube (full size)
+	// Draw the first cube at the origin.
     drawCube(1.0f, 1.0f);
 
-    // Second cube: translate right, then scale Y < 1
+	// Push the current model view matrix onto the stack.
     glPushMatrix();
+
+	// Translate the model view matrix to the right by 1.1 units.
     glTranslatef(1.1f, 0.0f, 0.0f);
-    glScalef(1.0f, 0.8f, 1.0f);   // 80% height
+
+	// Rotate the model view matrix by 45 degrees around the Y-axis.
+    glScalef(1.0f, 0.8f, 1.0f);
+
+	// Draw the second cube at the translated position.
     drawCube(1.0f, 1.0f);
+
+	// Push the current model view matrix onto the stack.
     glPopMatrix();
 
+	// Pop the current model view matrix from the stack.
     glPopMatrix();
+
+	// Set up the orthographic projection matrix.
     glMatrixMode(GL_PROJECTION);
+
+	// Pop the model view matrix from the stack.
     glPopMatrix();
 }
 
-// Task 3b: peek around & shorter cube2 (press '7')
-void Display7() {
+
+
+// Task 3 - Scene 2
+
+void Display7 ()
+{
+	// Set the color of the text to black.
     glColor3f(0, 0, 0);
-    drawBitmapString("Task 3b: Y‑peek + cube2 shorter (press '7')", -0.95f, -0.95f);
+
+	// Display the text "Task  3 - Scene 2" at the bottom left corner of the window.
+    drawBitmapString("Task  3 - Scene 2", -0.95f, -0.95f);
+
+	// Advance the animation time.
     advanceAnimationTime();
 
-    // Orthographic setup
+	// Set up the orthographic projection matrix.
     glMatrixMode(GL_PROJECTION);
+
+	// Push the current projection matrix onto the stack.
     glPushMatrix();
+
+	// Load the identity matrix into the projection matrix.
     glLoadIdentity();
-    glOrtho(-2, 2, -2, 2,
-        g_sceneDepth - g_sceneZRadius,
-        g_sceneDepth + g_sceneZRadius);
+
+	// Set up the orthographic projection with the specified parameters (left, right, bottom, top, near, far).
+    glOrtho(-2, 2, -2, 2, g_sceneDepth - g_sceneZRadius, g_sceneDepth + g_sceneZRadius);
+
+	// Switch to the model view matrix.
     glMatrixMode(GL_MODELVIEW);
+
+	// Push the current model view matrix onto the stack.
     glPushMatrix();
+
+	// Translate the model view matrix to the camera position.
     glTranslated(0, 0, -g_sceneDepth);
 
-    // Rotate world so you see sides
+	// Rotate the model view matrix by -10 degrees around the Y-axis.
     glRotated(-10.0, 0, 1, 0);
 
-    // Draw axes
+	// Draw the axes in the scene (length = 2).
     drawAxes(2.0f);
 
-    // First cube (full size)
+	// Draw the first cube at the origin.
     drawCube(1.0f, 1.0f);
 
-    // Second cube: translate, scale Y < 1
+	// Push the current model view matrix onto the stack.
     glPushMatrix();
+
+	// Translate the model view matrix to the right by 1.1 units.
     glTranslatef(1.1f, 0.0f, 0.0f);
-    glScalef(1.0f, 0.8f, 1.0f);   // same 80% height
+
+	// Rotate the model view matrix by 45 degrees around the Y-axis.
+    glScalef(1.0f, 0.8f, 1.0f);
+
+	// Draw the second cube at the translated position.
     drawCube(1.0f, 1.0f);
+
+	// Push the current model view matrix onto the stack.
     glPopMatrix();
 
+	// Pop the current model view matrix from the stack.
     glPopMatrix();
+
+	// Set up the orthographic projection matrix.
     glMatrixMode(GL_PROJECTION);
+
+	// Pop the model view matrix from the stack.
     glPopMatrix();
 }
 
 
 
-// Task 4
+// Task 4 - Scene 1
 
-// Task 4a: above-right view (press '8')
-void Display8() {
+void Display8 ()
+{
+	// Set the color of the text to black.
     glColor3f(0, 0, 0);
-    drawBitmapString("Task 4a: above & right (press '8')", -0.95f, -0.95f);
+
+	// Display the text "Task 4 - Scene 1t" at the bottom left corner of the window.
+    drawBitmapString("Task 4 - Scene 1", -0.95f, -0.95f);
+
+	// Advance the animation time.
     advanceAnimationTime();
 
-    // orthographic projection
+	// Set up the orthographic projection matrix.
     glMatrixMode(GL_PROJECTION);
+
+	// Push the current projection matrix onto the stack.
     glPushMatrix();
+
+	// Load the identity matrix into the projection matrix.
     glLoadIdentity();
-    glOrtho(-2, 2, -2, 2,
-        g_sceneDepth - g_sceneZRadius,
-        g_sceneDepth + g_sceneZRadius);
+
+	// Set up the orthographic projection with the specified parameters (left, right, bottom, top, near, far).
+    glOrtho(-2, 2, -2, 2, g_sceneDepth - g_sceneZRadius, g_sceneDepth + g_sceneZRadius);
+
+	// Switch to the model view matrix.
     glMatrixMode(GL_MODELVIEW);
+
+	// Push the current model view matrix onto the stack.
     glPushMatrix();
-    // move camera back
+
+	// Translate the model view matrix to the camera position.
     glTranslated(0, 0, -g_sceneDepth);
 
-    // tilt DOWN by 30° around X, then rotate LEFT by 30° around Y
-    glRotated(-30.0, 1, 0, 0);  // look down
-    glRotated(30.0, 0, 1, 0);  // look right
+	// Rotate the model view matrix by -30 degrees around the X-axis.
+    glRotated(-30.0, 1, 0, 0);
 
+	// Rotate the model view matrix by 30 degrees around the Y-axis.
+    glRotated(30.0, 0, 1, 0);
+
+	// Draw the axes in the scene (length = 1.5).
     drawAxes(1.5f);
+
+	// Draw the first cube at the origin.
     drawCube(1.0f, 1.0f);
 
+	// Pop the current model view matrix from the stack.
     glPopMatrix();
+
+	// Set up the orthographic projection matrix.
     glMatrixMode(GL_PROJECTION);
+
+	// Pop the projection matrix from the stack.
     glPopMatrix();
 }
 
 
-// Task 4b: below-left view (press '9')
-void Display9() {
+
+// Task 4 - Scene 2
+
+void Display9 ()
+{
+	// Set the color of the text to black.
     glColor3f(0, 0, 0);
-    drawBitmapString("Task 4b: below & left (press '9')", -0.95f, -0.95f);
+
+	// Display the text "Task 4 - Scene 2" at the bottom left corner of the window.
+    drawBitmapString("Task 4 - Scene 2", -0.95f, -0.95f);
+
+	// Advance the animation time.
     advanceAnimationTime();
 
-    // orthographic projection
+	// Set up the orthographic projection matrix.
     glMatrixMode(GL_PROJECTION);
+
+	// Push the current projection matrix onto the stack.
     glPushMatrix();
+
+	// Load the identity matrix into the projection matrix.
     glLoadIdentity();
-    glOrtho(-2, 2, -2, 2,
-        g_sceneDepth - g_sceneZRadius,
-        g_sceneDepth + g_sceneZRadius);
+
+	// Set up the orthographic projection with the specified parameters (left, right, bottom, top, near, far).
+    glOrtho(-2, 2, -2, 2, g_sceneDepth - g_sceneZRadius, g_sceneDepth + g_sceneZRadius);
+
+	// Switch to the model view matrix.
     glMatrixMode(GL_MODELVIEW);
+
+	// Push the current model view matrix onto the stack.
     glPushMatrix();
+
+	// Translate the model view matrix to the camera position.
     glTranslated(0, 0, -g_sceneDepth);
 
-    // tilt UP by 30° around X, then rotate RIGHT by 30° around Y
-    glRotated(30.0, 1, 0, 0);   // look up
-    glRotated(-30.0, 0, 1, 0);  // look left
+	// Rotate the model view matrix by -30 degrees around the X-axis.
+    glRotated(30.0, 1, 0, 0);
 
+	// Rotate the model view matrix by -30 degrees around the Y-axis.
+    glRotated(-30.0, 0, 1, 0);
+
+	// Draw the axes in the scene (length = 1.5).
     drawAxes(1.5f);
+
+	// Draw the first cube at the origin.
     drawCube(1.0f, 1.0f);
 
+	// Pop the current model view matrix from the stack.
     glPopMatrix();
+
+	// Set up the orthographic projection matrix.
     glMatrixMode(GL_PROJECTION);
+
+	// Pop the projection matrix from the stack.
     glPopMatrix();
 }
-
 
 
 
