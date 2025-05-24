@@ -18,71 +18,121 @@
     <canvas id="canvas" width="1889" height="945"></canvas>
   
 
-  
+
+	<!-- START - Homework 4 - START -->
+
+	<!--
+		Declare the shader version for the vertex (a point in the 3D space):
+	 	WebGL 2.0 (GLSL ES 3.00 - OpenGL Shading Language for Embedded Systems 3.00). 
+	-->
+	<script id = "vertex-shader" type = "x-shader/x-vertex">#version 300 es
+
+		// Set the precision of the floating point numbers.
+		precision mediump float;
+
+		// Set the value of pi.
+		#define M_PI 3.1415926535897932384626433832795
+
+		// Uniform - Declare a 4 x 4 matrix for transforming the vertices.
+		uniform mat4 u_matrix4;
+
+		// Uniform - Declare the current time in seconds, used to animate the circular motion of the cubes.
+		uniform float u_vertexTime;
+
+		// Input - Declare the position of the vertex in model space (before any transformation).
+		in vec3 i_vertPosition;
+		
+		// Input - Declare the color of the vertex in model space (before any transformation).
+		in vec4 i_vertColor;
+
+		// Output - Declare the position of the fragment.
+		out vec4 io_fragPosition;
+		
+		// Output - Declare the color of the fragment.
+		out vec4 io_fragColor;
+
+		void main ()
+		{
+			// Promote the vertex position to 4D coordinates and apply the transformation matrix (model, view and projection).
+			vec4 pos = vec4(i_vertPosition, 1.0) * u_matrix4;
+
+			// Set the coordinates for the circular motion of the cubes.
+			float radiusX = 5.0;
+			float radiusY = 3.0;
+
+			// Set the rotation angle such that the cubes rotate collectively, completing one full revolution every 2 seconds (pi radians per second).
+			float angle = u_vertexTime * M_PI;
+
+			// Update the position of the vertex based on the circular motion.
+			pos.x += radiusX * cos(angle);
+			pos.y += radiusY * sin(angle);
+
+			// Set the position of the vertex in clip space (after the transformation).
+			gl_Position = pos;
+
+			// Pass the original vertex position to the fragment shader.
+			io_fragPosition = vec4(i_vertPosition, 1.0);
+
+			// Pass the original vertex color to the fragment shader.
+			io_fragColor = i_vertColor;
+		}
+
+	</script>
+
+
+	<!--
+		Declare the shader version for the fragment (a pixel on the screen):
+	 	WebGL 2.0 (GLSL ES 3.00 - OpenGL Shading Language for Embedded Systems 3.00). 
+	-->
+	<script id = "fragment-shader" type = "x-shader/x-fragment">#version 300 es
+
+		// Set the precision of the floating point numbers.
+		precision mediump float;
+
+		// Uniform - Declare the current time in seconds, used to animate the red stripes over time.
+		uniform float u_fragmentTime;
+
+		// Output - Declare the final color of each fragment (pixel) on the screen.
+		out vec4 o_fragColor;
+
+		void main ()
+		{
+			// Set the frequency (the number of stripes).
+			float freq = 0.1;
+
+			// Set the horizontal speed of the stripes.
+			float speed = 30.0;
+
+			// Calculate the value of f based on the x-coordinate of the fragment, the frequency, and the current time and normalize it to the range [0, 1].
+			float f = 0.5 + 0.5 * sin(gl_FragCoord.x * freq + u_fragmentTime * speed);
+
+			// Set the feathering effect for the edges of the red stripe.
+			float edgeFeather = 0.4;
+
+			// Set the start of the red stripe in connection with the sine function.
+			float stripeStart = 0.70;
+
+			// Create a smooth transition for the red stripe.
+			float stripe = smoothstep(stripeStart - edgeFeather, stripeStart + edgeFeather, f);
+
+			// Set the color of the fragment based on the value of stripe.
+			o_fragColor = vec4(stripe, 0.0, 0.0, 1.0);
+		}
+
+	</script>
+
+	<!-- END - Homework 4 - END -->
 
 
 
+	<!-- Homework: Only change above ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^.
+	   But please read below to understand the program.
+	-->
 
-<script id="vertex-shader" type="x-shader/x-vertex">#version 300 es
-precision mediump float;
-#define M_PI 3.1415926535897932384626433832795
-
-uniform mat4 u_matrix4;
-uniform float u_vertexTime;
-
-in vec3 i_vertPosition;
-in vec4 i_vertColor;
-
-out vec4 io_fragPosition;
-out vec4 io_fragColor;
-
-void main() {
-    // original model+view+projection
-    vec4 pos = vec4(i_vertPosition, 1.0) * u_matrix4;
-
-    // 1) extra‐large circular orbit:
-    float radiusX = 1.5;   // much larger than 1.0
-    float radiusY = 1.5;   // keep it symmetric
-    float angle   = u_vertexTime * M_PI * 2.0;
-    pos.x += radiusX * cos(angle);
-    pos.y += radiusY * sin(angle);
-
-    gl_Position = pos;
-
-    // pass local position & color through
-    io_fragPosition = vec4(i_vertPosition, 1.0);
-    io_fragColor    = i_vertColor;
-}
-</script>
-
-
-
-
-<script id="fragment-shader" type="x-shader/x-fragment">#version 300 es
-precision mediump float;
-
-uniform float u_fragmentTime;
-
-out vec4 o_fragColor;
-
-void main() {
-    // map window‐space X into a moving sine‐wave [0,1]
-    float freq  = 0.1;                  // higher → stripes closer
-    float speed = 4.0;                  // faster motion
-    float f     = 0.5 + 0.5 * sin(gl_FragCoord.x * freq + u_fragmentTime * speed);
-
-    // create a narrow band near f≈1.0, with soft edges
-    float edgeFeather = 0.02;           // softness
-    float stripeStart = 0.90;           // how early the red starts
-    float stripe = smoothstep(stripeStart - edgeFeather,
-                              stripeStart + edgeFeather, f);
-
-    // black background with blurred red stripes
-    o_fragColor = vec4(stripe, 0.0, 0.0, 1.0);
-}
-</script>
-
-
+	<!-- The following meta tag is used to prevent the browser from
+		 trying to scale the canvas. -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 
 
