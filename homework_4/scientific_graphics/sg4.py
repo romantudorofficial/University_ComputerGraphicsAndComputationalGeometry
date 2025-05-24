@@ -238,8 +238,12 @@ class OglSimpleRenderer():
 
 
 
+            # START - Homework 4 - START
 
-            accel = [0, 0, -30]  # stronger gravity pulls down faster
+            # Set the acceleration vector to simulate gravity.
+            accel = [0, 0, -30]
+
+            # END - Homework 4 - END
 
 
 
@@ -277,75 +281,127 @@ class OglSimpleRenderer():
 
 
 
+    # START - Homework 4 - START
 
+    def integrate (self, obj, accel = [0,0,0], dt = 1, collisionElasticity = 0.8, collisionFriction = 0.2, airFriction = 0.2):
 
+        '''
+            Integrate the motion of the object, taking into account acceleration, speed, position and time.
+            Input:
+                - obj: the object to be integrated
+                - accel: the acceleration to be applied to the object
+                - dt: the time step for the integration
+                - collisionElasticity: how bouncy the object is when it collides with the walls
+                - collisionFriction: how much velocity is lost sideways on bounce
+                - airFriction: the air friction to be applied to the object
+            Output:
+                - obj: the updated object with the new position and velocity
+        '''
 
-
-
-    def integrate(self, obj,
-                  accel     = [0,0,0],
-                  dt        = 1,
-                  collisionElasticity = 0.8,   # less bouncy
-                  collisionFriction   = 0.2,   # more energy lost each bounce
-                  airFriction         = 0.2):  # stronger continuous drag
-
-        """
-        Semi-implicit Euler + box collisions + drag + floor rest.
-        """
-        # unpack
+        # Unpack the object:
+        #   - vertVbo = vertex buffer object for rendering
+        #   - colVbo = color buffer object for rendering
+        #   - l = number of vertices
+        #   - cc = number of color components (3 or 4)
+        #   - primitive = OpenGL primitive type
+        #   - pos = the current position [x, y, z] of the object's center
+        #   - vel = the current velocity [vx, vy, vz] of the object
+        #   - center = the center of the object [cx, cy, cz]
         vertVbo, colVbo, l, cc, primitive, pos, vel, center = obj
-        minX, maxX, minY, maxY, minZ, maxZ   = self.sceneVolume
 
-        # 1) velocity ← velocity + accel·dt
+        # Set the 3D bounding box for the simulation space:
+        #   - minX, maxX = left, right walls
+        #   - minY, maxY = front, back walls
+        #   - minZ, maxZ = bottom, top walls
+        minX, maxX, minY, maxY, minZ, maxZ = self.sceneVolume
+
+        # Solve tasks 2 and 3:
+        #   - apply Newton's second law, "v = v + a * dt", for each axis (x, y, z).
+        #   - update velocity based on acceleration
         vel[0] += accel[0] * dt
         vel[1] += accel[1] * dt
         vel[2] += accel[2] * dt
 
-        # 2) position ← position + velocity·dt
+        # Solve tasks 1 and 3:
+        #   - move the object based on its velocity using the "x = x + v * dt" formula for each axis (x, y, z).
+        #   - update position based on velocity
         pos[0] += vel[0] * dt
         pos[1] += vel[1] * dt
         pos[2] += vel[2] * dt
 
-        # 3) collisions on X, Y, Z
-        #    clamp pos to walls, reflect normal vel with 'elasticity', apply 'friction' to the other two axes
-        def collide_axis(i, mn, mx):
+        # Solve task 5:
+        #   - apply collision elasticity and friction to the velocity based on the collision with the walls of the bounding box.
+        def collide_axis (i, mn, mx):
+            
+            '''
+                Check for collisions with the walls of the bounding box.
+                Input:
+                    - i: the index of the axis (0 for x, 1 for y, 2 for z)
+                    - mn: the minimum value for the axis
+                    - mx: the maximum value for the axis
+                Output:
+                    - pos[i]: the updated position of the object along the axis
+                    - vel[i]: the updated velocity of the object along the axis
+            '''
+
+            # Get half of the object's size along axis i.
             c = center[i]
+
+            # If the position of the object is below min (the object hits the lower wall), clamp it and bounce:
             if pos[i] < mn + c:
+
+                # Clamp the position to the minimum value.
                 pos[i] = mn + c
+
+                # Reverse the velocity along the axis and apply elasticity for bouncing.
                 vel[i] = -vel[i] * collisionElasticity
-                # friction on the other two axes
-                for j in (x for x in (0,1,2) if x!=i):
-                    vel[j] *= (1 - collisionFriction)
-            elif pos[i] > mx - c:
-                pos[i] = mx - c
-                vel[i] = -vel[i] * collisionElasticity
-                for j in (x for x in (0,1,2) if x!=i):
+
+                # Apply friction to the other axes.
+                for j in (x for x in (0, 1, 2) if x != i):
+
+                    # Reduce the velocity along the other axes based on friction.
                     vel[j] *= (1 - collisionFriction)
 
+            # If the position of the object is above max (the object hits the upper wall), clamp it and bounce:
+            elif pos[i] > mx - c:
+
+                # Clamp the position to the maximum value.
+                pos[i] = mx - c
+
+                # Reverse the velocity along the axis and apply elasticity for bouncing.
+                vel[i] = -vel[i] * collisionElasticity
+
+                # Apply friction to the other axes.
+                for j in (x for x in (0, 1, 2) if x != i):
+
+                    # Reduce the velocity along the other axes based on friction.
+                    vel[j] *= (1 - collisionFriction)
+
+        # Solve task 4:
+        #   - check for collisions with the walls of the bounding box for each axis (x, y, z).
         collide_axis(0, minX, maxX)
         collide_axis(1, minY, maxY)
         collide_axis(2, minZ, maxZ)
 
-        # 4) continuous drag (air resistance)
+        # Get the drag factor based on air friction.
         drag_factor = max(0.0, 1 - airFriction * dt)
+
+        # Apply air friction to the velocity for each axis (x, y, z).
         vel[0] *= drag_factor
         vel[1] *= drag_factor
         vel[2] *= drag_factor
 
-        # 5) floor rest: if essentially on bottom and almost stopped, zero out
+        # Get the floor height.
         floor_z = minZ + center[2]
+
+        # If the object is at rest (velocity is close to zero), set its velocity to zero.
         if abs(pos[2] - floor_z) < 1e-3 and abs(vel[2]) < 1e-2:
             vel[:] = [0.0, 0.0, 0.0]
 
-        # write back
+        # Update the object with the new velocity.
         obj[6] = vel
 
-
-
-
-
-
-
+    # END - Homework 4 - END
 
 
         
@@ -440,4 +496,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
