@@ -261,7 +261,7 @@ void Display2 ()
     drawAxes();
 
 	// Declare the angle of rotation around the Y-axis.
-    const double angY = 45.0;
+    const double angY = 50.0;
 
 	// Rotate the model view matrix by the specified angle around the Y-axis.
     glRotated(angY, 0, 1, 0);

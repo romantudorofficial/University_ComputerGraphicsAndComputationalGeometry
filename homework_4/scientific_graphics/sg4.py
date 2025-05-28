@@ -241,7 +241,7 @@ class OglSimpleRenderer():
             # START - Homework 4 - START
 
             # Set the acceleration vector to simulate gravity.
-            accel = [0, 0, -30]
+            accel = [0, 0, -10]
 
             # END - Homework 4 - END
 
@@ -283,7 +283,7 @@ class OglSimpleRenderer():
 
     # START - Homework 4 - START
 
-    def integrate (self, obj, accel = [0,0,0], dt = 1, collisionElasticity = 0.8, collisionFriction = 0.2, airFriction = 0.2):
+    def integrate (self, obj, accel = [0,0,0], dt = 1, collisionElasticity = 0.01, collisionFriction = 0.2, airFriction = 0):
 
         '''
             Integrate the motion of the object, taking into account acceleration, speed, position and time.
